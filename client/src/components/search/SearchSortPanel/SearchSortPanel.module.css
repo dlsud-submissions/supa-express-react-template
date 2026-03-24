@@ -1,0 +1,172 @@
+.panel {
+  position: absolute;
+  top: calc(100% + var(--space-0-5));
+  left: 0;
+  z-index: var(--z-dropdown);
+  min-width: 240px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+  padding: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0-5);
+}
+
+/* ── Header ──────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-0-5) var(--space-1);
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+}
+
+.clearBtn {
+  font-size: var(--text-xs);
+  color: var(--primary-hover);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ── Active sort row ─────────────────────────── */
+.activeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0-5) var(--space-1);
+  border-radius: 6px;
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  margin-bottom: var(--space-0-5);
+}
+
+/* Property name label */
+.propChip {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Direction dropdown chip ─────────────────── */
+.dirDropdownWrapper {
+  position: relative;
+  margin-left: auto;
+}
+
+.dirChip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-1);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 99px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-color);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s ease;
+}
+
+.dirChip:hover,
+.dirChipOpen {
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+  transition: transform 0.15s ease;
+}
+
+/* ── Direction dropdown menu ─────────────────── */
+.dirMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: calc(var(--z-dropdown) + 10);
+  min-width: 130px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.dirOption {
+  display: block;
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-color);
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dirOption:hover {
+  background-color: var(--btn-bg);
+}
+
+.dirOptionActive {
+  color: var(--primary-hover);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Property list ───────────────────────────── */
+.options {
+  display: flex;
+  flex-direction: column;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-1);
+  border-radius: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.option:hover {
+  background-color: var(--btn-bg);
+}
+
+.activeOption {
+  color: var(--primary-hover);
+  font-weight: var(--weight-semibold);
+}
+
+/* ── Done button ─────────────────────────────── */
+.doneBtn {
+  width: 100%;
+  padding: var(--space-1);
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  color: var(--text-color);
+  margin-top: var(--space-0-5);
+}
+
+.doneBtn:hover {
+  border-color: var(--primary-hover);
+}

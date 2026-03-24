@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Team Discussion
+    # url: https://github.com/[ORG/OWNER-NAME]/[REPO-TITLE]/discussions
+    url: https://github.com/top-submissions/template-react-expressjs/discussions
+    about: Questions, ideas, or anything that isn't a bug or feature request — use Discussions.

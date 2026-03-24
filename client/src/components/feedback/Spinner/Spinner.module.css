@@ -1,0 +1,23 @@
+.spinnerWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.spinner {
+  /* Use global border color for the background ring */
+  border: 3px solid var(--border-color);
+  /* Use global primary color for the spinning indicator */
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+}
+
+.message {
+  font-family: var(--font-main);
+  font-size: var(--text-sm);
+  color: var(--text-color);
+  opacity: 0.8;
+  margin: 0;
+}

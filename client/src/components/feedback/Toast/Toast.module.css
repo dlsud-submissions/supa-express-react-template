@@ -1,0 +1,55 @@
+/* Container for the toast notification */
+.toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 300px;
+  max-width: 450px;
+  /* Use global spacing and typography variables */
+  padding: var(--space-2);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--btn-bg);
+  color: var(--text-color);
+  /* Use global shadow variables */
+  box-shadow: var(--shadow-md);
+}
+
+/* Semantic Variants using global color tokens */
+.success {
+  border-left: 6px solid var(--success-text);
+}
+
+.error {
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+}
+
+.info {
+  border-left: 6px solid var(--primary-hover);
+  opacity: 0.9;
+}
+
+.message {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  line-height: var(--lh-base);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: currentColor;
+  cursor: pointer;
+  /* Use global spacing for alignment */
+  padding: var(--space-0-5);
+  font-size: var(--text-xl);
+  line-height: 1;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.closeButton:hover {
+  opacity: 1;
+}

@@ -1,0 +1,84 @@
+.formContainer {
+  max-width: 400px;
+  /* Use global spacing and layout variables */
+  margin: var(--space-4) auto;
+  padding: var(--space-4);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-color);
+  /* Use global shadow variables */
+  box-shadow: var(--shadow-md);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  /* Use global content gap */
+  gap: var(--space-3);
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: var(--space-1);
+}
+
+.inputGroup label {
+  /* Use global typography variables */
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+}
+
+.inputGroup input {
+  padding: var(--space-1-5, 0.75rem);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-main);
+  transition: border-color 0.2s ease;
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: var(--primary-hover);
+}
+
+.submitBtn {
+  width: 100%;
+  /* Use global spacing and typography */
+  padding: var(--space-1-5, 0.75rem);
+  background-color: var(--btn-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submitBtn:hover {
+  background-color: var(--primary-hover);
+  color: white;
+}
+
+.footerText {
+  /* Use global typography */
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.link {
+  color: var(--primary-hover);
+  text-decoration: none;
+  font-weight: var(--weight-medium);
+}
+
+.link:hover {
+  text-decoration: underline;
+}

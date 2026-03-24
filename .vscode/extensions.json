@@ -1,0 +1,34 @@
+{
+  "recommendations": [
+    /* Code Quality & Formatting */
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "DavidAnson.vscode-markdownlint",
+    "aaron-bond.better-comments",
+
+    /* Language Support & Intellisense */
+    "christian-kohler.path-intellisense",
+    "prisma.prisma",
+    "mikestead.dotenv",
+
+    /* Icons & Themes */
+    "PKief.material-icon-theme",
+
+    /* Git */
+    "waderyan.gitblame",
+
+    /* Markdown */
+    "shd101wyy.markdown-preview-enhanced",
+    "yzhang.markdown-all-in-one",
+
+    /* Testing */
+    "vitest.explorer",
+
+    /* CSS & Styling */
+    "styled-components.vscode-styled-components",
+    "bradlc.vscode-tailwindcss",
+
+    /* React Workflow & Snippets */
+    "dsznajder.es7-react-js-snippets"
+  ]
+}

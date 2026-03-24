@@ -1,0 +1,97 @@
+.container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: var(--space-4);
+}
+
+.header {
+  margin-bottom: var(--space-6);
+  text-align: left;
+}
+
+.title {
+  color: var(--text-color);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--lh-tight);
+}
+
+.subtitle {
+  opacity: 0.7;
+  font-size: var(--text-lg);
+  line-height: var(--lh-base);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-4px);
+  /* Replaced hardcoded shadow with global MD elevation */
+  box-shadow: var(--shadow-md);
+}
+
+.cardTitle {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+}
+
+.cardDescription {
+  font-size: var(--text-sm);
+  line-height: var(--lh-relaxed);
+  opacity: 0.8;
+  color: var(--text-color);
+}
+
+/* Logic for high-privilege cards using semantic error tokens */
+.criticalCard:hover {
+  border-color: var(--error-text);
+  background-color: var(--error-bg);
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: var(--space-2);
+  }
+}
+
+.cardHeader {
+  /* Layout icon and title horizontally */
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--primary-color);
+}
+
+.criticalCard .cardHeader {
+  /* Use error/warning color for high-privilege areas */
+  color: var(--error-text);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}

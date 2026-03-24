@@ -1,0 +1,26 @@
+.button {
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--btn-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--space-1);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-base);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s active;
+  /* Use global shadow for subtle depth */
+  box-shadow: var(--shadow-sm);
+}
+
+.button:hover {
+  background-color: var(--primary-hover);
+  color: white;
+  border-color: transparent;
+}
+
+.button:active {
+  transform: scale(0.98);
+}

@@ -1,0 +1,30 @@
+{
+  "name": "[REPO_NAME]",
+  "private": true,
+  "version": "1.0.0",
+  "description": "[REPO_DESCRIPTION]",
+  "type": "module",
+  "scripts": {
+    "=== ORCHESTRATION ===": "",
+    "dev": "concurrently \"npm --prefix client run dev\" \"npm --prefix server run dev\"",
+    "client": "npm --prefix client run dev",
+    "server": "npm --prefix server run dev",
+    "=== SETUP ===": "",
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/[REPO_AUTHOR]/[REPO_NAME].git"
+  },
+  "keywords": [],
+  "author": "[REPO_AUTHOR]",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues"
+  },
+  "homepage": "https://github.com/[REPO_AUTHOR]/[REPO_NAME]#readme"
+}

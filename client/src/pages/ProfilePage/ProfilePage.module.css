@@ -1,0 +1,97 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--container-padding);
+}
+
+.profileCard {
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--space-2);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: var(--primary-hover);
+  color: #ffffff;
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 4px var(--bg-color),
+    0 0 0 6px var(--primary-hover);
+}
+
+.infoSection {
+  text-align: center;
+  width: 100%;
+}
+
+.username {
+  color: var(--text-color);
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-1);
+  font-weight: var(--weight-bold);
+}
+
+.roleBadge {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-2);
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--space-4);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  color: var(--text-color);
+  letter-spacing: 0.05em;
+}
+
+.detailsGrid {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color);
+}
+
+.detailItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.detailIcon {
+  color: var(--text-color);
+  opacity: 0.6;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.detailValue {
+  font-size: var(--text-base);
+  color: var(--text-color);
+  font-weight: var(--weight-medium);
+}
+
+.loadingWrapper,
+.errorWrapper {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8);
+  font-size: var(--text-lg);
+  color: var(--text-color);
+}

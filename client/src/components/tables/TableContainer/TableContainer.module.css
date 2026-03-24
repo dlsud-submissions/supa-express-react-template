@@ -1,0 +1,37 @@
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  background-color: var(--bg-color);
+  /* Prevent wrapper from clipping portal dropdowns on the last row */
+  overflow-y: visible;
+}
+
+.table {
+  width: 100%;
+  min-width: 560px; /* triggers horizontal scroll before columns collapse */
+  border-collapse: collapse;
+  text-align: left;
+  font-size: var(--text-sm);
+}
+
+.table thead {
+  background-color: var(--btn-bg);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.table th {
+  padding: var(--space-2);
+  font-weight: var(--weight-semibold);
+  color: var(--text-color);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.emptyState {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--text-color);
+  opacity: 0.6;
+}

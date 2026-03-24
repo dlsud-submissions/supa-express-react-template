@@ -1,0 +1,24 @@
+.container {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-0-5);
+  margin: var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 8px;
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
+  font-size: var(--text-sm);
+}
+
+.label {
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  flex-shrink: 0;
+}
+
+.message {
+  font-weight: var(--weight-medium);
+  margin: 0;
+}

@@ -1,0 +1,24 @@
+.container {
+  margin: var(--space-2) 0;
+  padding: var(--space-1) var(--space-2);
+  border-radius: 6px;
+  border: 1px solid var(--error-border);
+  background-color: var(--error-bg);
+  color: var(--error-text);
+  font-size: var(--text-sm);
+}
+
+.summary {
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-0-5);
+}
+
+.errorList {
+  list-style: disc;
+  margin-left: var(--space-3);
+}
+
+.errorItem {
+  margin-top: var(--space-0-5);
+  line-height: var(--lh-base);
+}

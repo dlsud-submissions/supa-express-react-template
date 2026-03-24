@@ -1,0 +1,54 @@
+/* Variables (Design Tokens) */
+@import './variables/colors.css';
+@import './variables/spacing.css';
+@import './variables/shadows.css';
+@import './variables/typography.css';
+
+/* Base Styles (Reset & Layout) */
+@import './base/reset.css';
+@import './base/layout.css';
+
+/* Global Motion */
+@import './animations.css';
+
+/* --- Application Global Defaults --- */
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: var(--text-4xl);
+  line-height: var(--lh-tight);
+  font-weight: var(--weight-bold);
+  margin-bottom: var(--space-3);
+}
+
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+/* Base button styles for standard tags */
+button {
+  padding: 0.6em 1.2em;
+  border-radius: var(--space-1);
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}

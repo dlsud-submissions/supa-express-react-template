@@ -1,0 +1,40 @@
+.selector {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border-color);
+  color: var(--text-color);
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.viewBtn:last-child {
+  border-right: none;
+}
+
+.viewBtn:hover:not(.disabled) {
+  background-color: var(--btn-bg);
+}
+
+.active {
+  background-color: var(--btn-bg);
+  color: var(--primary-hover);
+}
+
+.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

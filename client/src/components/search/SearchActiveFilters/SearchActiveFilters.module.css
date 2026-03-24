@@ -1,0 +1,58 @@
+.strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-0-5) 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px var(--space-1);
+  border-radius: 99px;
+  font-size: var(--text-xs);
+  border: 1px solid var(--border-color);
+  background-color: var(--btn-bg);
+}
+
+.sortChip {
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
+}
+
+.filterChip {
+  color: var(--text-color);
+}
+
+.chipKey {
+  font-weight: var(--weight-semibold);
+  opacity: 0.7;
+}
+
+.chipValue {
+  font-weight: var(--weight-medium);
+}
+
+.removeBtn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.removeBtn:hover {
+  opacity: 1;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--border-color);
+  margin: 0 var(--space-0-5);
+}

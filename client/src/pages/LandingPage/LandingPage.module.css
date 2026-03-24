@@ -1,0 +1,87 @@
+.container {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+}
+
+.hero {
+  flex-direction: column;
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  background: linear-gradient(180deg, var(--bg-color) 0%, var(--btn-bg) 100%);
+}
+
+.title {
+  font-size: var(--text-4xl);
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-bold);
+  line-height: var(--lh-tight);
+}
+
+.description {
+  font-size: var(--text-lg);
+  max-width: 600px;
+  margin-bottom: var(--space-4);
+  line-height: var(--lh-relaxed);
+  opacity: 0.8;
+}
+
+.ctaGroup {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.primaryButton {
+  background-color: var(--primary-hover);
+  color: #ffffff;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-1);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+  transition: transform 0.2s ease;
+}
+
+.primaryButton:hover {
+  transform: translateY(-2px);
+  /* Ensure text remains white on hover to prevent invisibility */
+  color: #ffffff;
+}
+
+.secondaryButton {
+  background-color: var(--btn-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--space-1);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.secondaryButton:hover {
+  transform: translateY(-2px);
+  background-color: var(--border-color);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-4);
+  padding: var(--space-8) var(--space-4);
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+.featureCard {
+  padding: var(--space-4);
+  background-color: var(--btn-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--space-1);
+}
+
+.featureCard h3 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-2);
+}

@@ -1,0 +1,52 @@
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.popoverWrapper {
+  position: relative;
+}
+
+.controlBtn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-0-5);
+  padding: var(--space-0-5) var(--space-1);
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: var(--text-sm);
+  color: var(--text-color);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.controlBtn:hover {
+  background-color: var(--btn-bg);
+}
+
+.active {
+  border-color: var(--primary-hover);
+  color: var(--primary-hover);
+}
+
+.badge {
+  background-color: var(--primary-hover);
+  color: white;
+  border-radius: 99px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  padding: 0 5px;
+  min-width: 16px;
+  text-align: center;
+  line-height: 16px;
+}
