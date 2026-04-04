@@ -22,7 +22,7 @@
     "command": "workbench.files.action.collapseExplorerFolders"
   },
   {
-    "key": "shift+s shift+t",
+    "key": "shift+alt+s shift+alt+t",
     "command": "workbench.view.extension.test"
   }
 ]
