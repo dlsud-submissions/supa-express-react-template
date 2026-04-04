@@ -41,6 +41,24 @@ Closes #
 
 ---
 
+## What
+
+<!-- What does this PR introduce or change? -->
+
+## Why
+
+<!-- What problem does this solve? -->
+
+## How
+
+<!-- Key implementation decisions and trade-offs -->
+
+## Testing
+
+<!-- How was this verified? Include manual steps or automated tests -->
+
+---
+
 ## Pre-Merge Checklist
 
 - [ ] Synced with `dev` before opening this PR (`git fetch origin && git merge origin/dev`)

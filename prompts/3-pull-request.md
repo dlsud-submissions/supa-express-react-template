@@ -157,6 +157,24 @@ Closes #
 
 ---
 
+## What
+
+<!-- What does this PR introduce or change? -->
+
+## Why
+
+<!-- What problem does this solve? -->
+
+## How
+
+<!-- Key implementation decisions and trade-offs -->
+
+## Testing
+
+<!-- How was this verified? Include manual steps or automated tests -->
+
+---
+
 ## Pre-Merge Checklist
 
 - [ ] Synced with `dev` before opening this PR (`git fetch origin && git merge origin/dev`)
@@ -165,35 +183,10 @@ Closes #
 - [ ] Self-reviewed my own diff before requesting review
 - [ ] Added or updated tests for the changes made
 - [ ] No new ESLint errors (`npm run lint`)
-```
 
 ---
-
-### What
-
-Adds live cage status checks to the hotel booking confirmation flow.
-
-### Why
-
-Receptionists had no way to check cage occupancy before confirming a
-booking, which caused overbooking errors that required staff to
-manually call clients and reschedule.
-
-### How
-
-- Added `cageStatus` field to the `Cage` model in Prisma schema
-- Created `/api/cages/availability` endpoint in Express
-- Updated the booking form in React to display live cage status
-- Availability check is scoped by size category (S/M/L/XL) per branch
-
-### Testing
-
-- Manually tested simultaneous bookings at both Makati and Southwoods
-- Verified overbooking prevention triggers when all cages are occupied
-- Unit tested the availability endpoint with Vitest (6 cases)
-
-Pre-Merge Checklist: all items checked
 
 ## Merge Commit Message (squash merge)
 
 feat(booking): add real-time cage availability tracking (#42)
+```
