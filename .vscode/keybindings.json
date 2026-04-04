@@ -4,12 +4,12 @@
     "command": "editor.emmet.action.wrapWithAbbreviation"
   },
   {
-    "key": "alt+f a",
+    "key": "shift+alt+f shift+alt+a",
     "command": "editor.foldAll",
     "when": "editorTextFocus && foldingEnabled"
   },
   {
-    "key": "alt+u a",
+    "key": "shift+alt+u shift+alt+a",
     "command": "editor.unfoldAll",
     "when": "editorTextFocus && foldingEnabled"
   },
