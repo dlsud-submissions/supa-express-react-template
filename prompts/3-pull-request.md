@@ -100,50 +100,94 @@ Use one or more:
 ## OUTPUT FORMAT
 
 ```
-## PR Title
+## PR TITLE
 feat(booking): add real-time cage availability tracking
 
-## Base Branch
+## BASE BRANCH
 dev
 
-## Compare Branch
+## COMPARE BRANCH
 feat/cage-availability-tracking
 
-## Labels
+## LABELS
 feature
 
-## PR Body
-(fills .github/PULL_REQUEST_TEMPLATE.md)
+## PR BODY
 
-Summary:
-Adds real-time cage availability tracking to prevent overbooking
-across both branches.
+## Summary
 
-Type of Change: feat
+<!-- One sentence: what does this PR do? -->
 
-Scope: booking
+## Type of Change
 
-Linked Issue: Closes #18
+<!-- Check the one that applies -->
 
-Sprint: Sprint 3 — Hotel Boarding
+- [ ] `feat` — new feature
+- [ ] `fix` — bug fix
+- [ ] `refactor` — restructuring, no behavior change
+- [ ] `test` — tests only
+- [ ] `docs` — documentation
+- [ ] `chore` — deps / config / CI
+- [ ] `style` — formatting only
+
+## Scope
+
+<!-- Which area of the app is affected? e.g. auth, appointments, search -->
+
+## Linked Issue
+
+<!-- Required — every PR should close an issue -->
+
+Closes #
+
+## Sprint
+
+<!-- e.g. Sprint 2 — Appointment Booking -->
+
+## What Changed
+
+<!-- Briefly list key files or components touched and why -->
+
+-
+-
+
+## Screenshots / Demo
+
+<!-- For UI changes, paste a screenshot or screen recording. Delete this section if not applicable. -->
+
+---
+
+## Pre-Merge Checklist
+
+- [ ] Synced with `dev` before opening this PR (`git fetch origin && git merge origin/dev`)
+- [ ] All tests pass locally (`npm test` in both `client/` and `server/`)
+- [ ] No `console.log` left in production code
+- [ ] Self-reviewed my own diff before requesting review
+- [ ] Added or updated tests for the changes made
+- [ ] No new ESLint errors (`npm run lint`)
+```
 
 ---
 
 ### What
+
 Adds live cage status checks to the hotel booking confirmation flow.
 
 ### Why
+
 Receptionists had no way to check cage occupancy before confirming a
 booking, which caused overbooking errors that required staff to
 manually call clients and reschedule.
 
 ### How
+
 - Added `cageStatus` field to the `Cage` model in Prisma schema
 - Created `/api/cages/availability` endpoint in Express
 - Updated the booking form in React to display live cage status
 - Availability check is scoped by size category (S/M/L/XL) per branch
 
 ### Testing
+
 - Manually tested simultaneous bookings at both Makati and Southwoods
 - Verified overbooking prevention triggers when all cages are occupied
 - Unit tested the availability endpoint with Vitest (6 cases)
@@ -151,5 +195,5 @@ manually call clients and reschedule.
 Pre-Merge Checklist: all items checked
 
 ## Merge Commit Message (squash merge)
+
 feat(booking): add real-time cage availability tracking (#42)
-```
