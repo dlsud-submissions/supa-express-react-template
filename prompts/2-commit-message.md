@@ -24,6 +24,9 @@ refactor(pricing): move tiered pricing logic out of controller into utility -->
 5. Output the full commit message ready to paste into a git editor.
 6. Output an ASCII directory structure showing only affected files:
    - `added`, `modified`, `deleted`, or `renamed`.
+7. Output the actual changed/added files as artifacts or file attachments
+   so the developer can copy or download them directly without
+   digging through the chat. Deleted files do not need an artifact.
 
 ---
 
@@ -71,12 +74,21 @@ refactor(pricing): move tiered pricing logic out of controller into utility -->
 - Add `BREAKING CHANGE:` footer with migration instructions
 - Use both for maximum tooling and changelog compatibility
 
+## File Artifacts
+
+- Every file that is added or modified must be output as a separate
+  artifact or file attachment so the developer can copy or download it.
+- Each artifact should contain only that one file's full contents.
+- Deleted files do not need an artifact — the directory structure
+  annotation (`deleted`) is sufficient.
+- Label each artifact clearly with its repo-relative path
+  (e.g., `client/.env.example`).
+
 ---
 
 # OUTPUT FORMAT:
 
 ```
-
 feat(booking): add real-time cage availability tracking
 
 Receptionists currently have no visibility into which cages are
@@ -88,11 +100,9 @@ so the system prevents double-booking when all cages for a given
 size category are already occupied.
 
 Closes #18
-
 ```
 
 ```
-
 Directory Structure:
 
 project-root/
@@ -105,31 +115,36 @@ project-root/
 │     └─ BookingPage.tsx (modified)
 ├─ api/
 │  └─ bookingController.ts (modified)
-
 ```
+
+[artifact: src/services/cageAvailability.ts]
+[artifact: src/hooks/useCageAvailability.ts]
+[artifact: src/pages/BookingPage.tsx]
+[artifact: api/bookingController.ts]
+
+---
 
 **For a trivial change (no body needed):**
 
 ```
-
 chore(deps): update prisma orm to v5.10
-
 ```
 
 ```
-
 Directory Structure:
 
 project-root/
 ├─ package.json (modified)
 └─ package-lock.json (modified)
-
 ```
+
+[artifact: package.json]
+
+---
 
 **For a breaking change:**
 
 ```
-
 feat(api)!: rename /bookings endpoint to /appointments
 
 The previous endpoint name was inconsistent with the rest of the API
@@ -137,11 +152,9 @@ surface and caused confusion during onboarding for new developers.
 
 BREAKING CHANGE: /api/bookings is now /api/appointments.
 Update all client-side fetch calls and API documentation accordingly.
-
 ```
 
 ```
-
 Directory Structure:
 
 project-root/
@@ -152,5 +165,8 @@ project-root/
 │  │  └─ appointmentController.ts (modified)
 │  └─ api/
 │     └─ index.ts (modified)
-
 ```
+
+[artifact: src/routes/appointments.ts]
+[artifact: src/controllers/appointmentController.ts]
+[artifact: src/api/index.ts]
