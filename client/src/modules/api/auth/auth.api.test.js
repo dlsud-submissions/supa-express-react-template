@@ -1,29 +1,64 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { supabase } from '../../../lib/supabase.js';
 import { authApi } from './auth.api';
 
+// Mock the Supabase client to prevent actual network calls
+vi.mock('../../../lib/supabase.js', () => ({
+  supabase: {
+    auth: {
+      signUp: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+      getSession: vi.fn(),
+    },
+  },
+}));
+
 describe('authApi', () => {
-  it('login sends a POST request with credentials included', async () => {
-    // --- Arrange ---
-    // Prepare test credentials and mock response
-    const credentials = { username: 'test', password: 'password' };
-    vi.mocked(fetch).mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ message: 'Success' }),
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('signup', () => {
+    it('calls signUp with derived email and username metadata', async () => {
+      const userData = { username: 'testuser', password: 'securePassword' };
+
+      await authApi.signup(userData);
+
+      expect(supabase.auth.signUp).toHaveBeenCalledWith({
+        email: 'testuser@app.local',
+        password: 'securePassword',
+        options: {
+          data: { username: 'testuser' },
+        },
+      });
     });
+  });
 
-    // --- Act ---
-    // Execute the login API call
-    await authApi.login(credentials);
+  describe('login', () => {
+    it('calls signInWithPassword with derived email', async () => {
+      const credentials = { username: 'testuser', password: 'securePassword' };
 
-    // --- Assert ---
-    // Verify fetch was called with correct endpoint and payload
-    expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/auth/log-in'),
-      expect.objectContaining({
-        method: 'POST',
-        credentials: 'include',
-        body: JSON.stringify(credentials),
-      })
-    );
+      await authApi.login(credentials);
+
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'testuser@app.local',
+        password: 'securePassword',
+      });
+    });
+  });
+
+  describe('logout', () => {
+    it('calls signOut to clear the local session', async () => {
+      await authApi.logout();
+      expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+  });
+
+  describe('checkStatus', () => {
+    it('calls getSession to retrieve existing session data', async () => {
+      await authApi.checkStatus();
+      expect(supabase.auth.getSession).toHaveBeenCalled();
+    });
   });
 });

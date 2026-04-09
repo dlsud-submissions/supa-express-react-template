@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { signupSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { authApi } from '../../../modules/api/auth/auth.api.js';
+import { signupSchema } from '../../../modules/validators/auth/auth.validator.js';
 import ValidationError from '../../errors/ValidationError/ValidationError';
 import styles from './SignupForm.module.css';
 
 /**
  * Signup form component for user registration.
- * - Manages local form state for username, password, and confirmation.
- * - Uses authApi service for network requests.
+ * - Calls authApi.signup() which uses Supabase Auth directly.
+ * - Navigates to /log-in on success.
+ * - Handles { data, error } return shape from Supabase SDK.
  * @returns {JSX.Element} The rendered signup form.
  */
 const SignupForm = () => {
@@ -18,6 +19,7 @@ const SignupForm = () => {
     confirmPassword: '',
   });
   const [errorData, setErrorData] = useState({ message: '', errors: [] });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   /**
@@ -31,7 +33,7 @@ const SignupForm = () => {
   };
 
   /**
-   * Processes the signup submission, validation, and API registration.
+   * Processes the signup submission via Supabase authApi.
    * @param {React.FormEvent} e
    */
   const handleSubmit = async (e) => {
@@ -41,7 +43,6 @@ const SignupForm = () => {
     // Validate form data against Zod schema
     const validation = signupSchema.safeParse(formData);
 
-    // Set client-side validation error if schema check fails
     if (!validation.success) {
       setErrorData({
         message: 'Validation failed',
@@ -52,25 +53,27 @@ const SignupForm = () => {
       return;
     }
 
-    try {
-      // Execute registration request
-      const response = await authApi.signup(formData);
+    setIsSubmitting(true);
 
-      if (response.ok) {
-        navigate('/log-in');
-      } else {
-        const errorBody = await response.json();
+    try {
+      const { error } = await authApi.signup(formData);
+
+      if (error) {
         setErrorData({
-          message: errorBody.message || 'Signup failed',
-          errors: errorBody.errors || [],
+          message: error.message || 'Signup failed',
+          errors: [],
         });
+        return;
       }
+
+      navigate('/log-in');
     } catch (err) {
-      // Handle Unexpected Network Errors
       setErrorData({
         message: `An error occurred: ${err.message}`,
         errors: [],
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -118,8 +121,12 @@ const SignupForm = () => {
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Register
+        <button
+          type="submit"
+          className={styles.submitBtn}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Registering...' : 'Register'}
         </button>
       </form>
 

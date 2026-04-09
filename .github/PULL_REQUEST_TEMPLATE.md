@@ -2,31 +2,11 @@
 
 <!-- One sentence: what does this PR do? -->
 
-## Type of Change
-
-<!-- Check the one that applies -->
-
-- [ ] `feat` — new feature
-- [ ] `fix` — bug fix
-- [ ] `refactor` — restructuring, no behavior change
-- [ ] `test` — tests only
-- [ ] `docs` — documentation
-- [ ] `chore` — deps / config / CI
-- [ ] `style` — formatting only
-
-## Scope
-
-<!-- Which area of the app is affected? e.g. auth, appointments, search -->
-
 ## Linked Issue
 
 <!-- Required — every PR should close an issue -->
 
 Closes #
-
-## Sprint
-
-<!-- e.g. Sprint 2 — Appointment Booking -->
 
 ## What Changed
 
@@ -52,10 +32,6 @@ Closes #
 ## How
 
 <!-- Key implementation decisions and trade-offs -->
-
-## Testing
-
-<!-- How was this verified? Include manual steps or automated tests -->
 
 ---
 

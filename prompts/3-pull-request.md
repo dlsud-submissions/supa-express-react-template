@@ -58,12 +58,6 @@ pre-fill the body when you open a PR. Fill in each section:
   because the code already shows it
 - Do not list every file changed — list decisions, not a file index
 
-### Testing
-
-- Describe how the change was verified
-- Include manual steps, automated tests, or both
-- Mention edge cases tested if relevant
-
 ### Related
 
 - Fill in `Closes #<issue>` in the Linked Issue field
@@ -99,50 +93,34 @@ Use one or more:
 
 ## OUTPUT FORMAT
 
-```
-## PR TITLE
+### PR TITLE
+
 feat(booking): add real-time cage availability tracking
 
-## BASE BRANCH
+### BASE BRANCH
+
 dev
 
-## COMPARE BRANCH
+### COMPARE BRANCH
+
 feat/cage-availability-tracking
 
-## LABELS
+### LABELS
+
 feature
 
-## PR BODY
+### PR BODY
 
+```
 ## Summary
 
 <!-- One sentence: what does this PR do? -->
-
-## Type of Change
-
-<!-- Check the one that applies -->
-
-- [ ] `feat` — new feature
-- [ ] `fix` — bug fix
-- [ ] `refactor` — restructuring, no behavior change
-- [ ] `test` — tests only
-- [ ] `docs` — documentation
-- [ ] `chore` — deps / config / CI
-- [ ] `style` — formatting only
-
-## Scope
-
-<!-- Which area of the app is affected? e.g. auth, appointments, search -->
 
 ## Linked Issue
 
 <!-- Required — every PR should close an issue -->
 
 Closes #
-
-## Sprint
-
-<!-- e.g. Sprint 2 — Appointment Booking -->
 
 ## What Changed
 
@@ -169,10 +147,6 @@ Closes #
 
 <!-- Key implementation decisions and trade-offs -->
 
-## Testing
-
-<!-- How was this verified? Include manual steps or automated tests -->
-
 ---
 
 ## Pre-Merge Checklist
@@ -183,10 +157,8 @@ Closes #
 - [ ] Self-reviewed my own diff before requesting review
 - [ ] Added or updated tests for the changes made
 - [ ] No new ESLint errors (`npm run lint`)
+```
 
----
-
-## Merge Commit Message (squash merge)
+### MERGE COMMIT MESSAGE
 
 feat(booking): add real-time cage availability tracking (#42)
-```

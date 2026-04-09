@@ -1,31 +1,31 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
-import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
-import { authApi } from '../../../modules/api/auth/auth.api.js';
-import ValidationError from '../../errors/ValidationError/ValidationError';
 import AuthenticationError from '../../errors/AuthenticationError/AuthenticationError';
+import ValidationError from '../../errors/ValidationError/ValidationError';
 import styles from './LoginForm.module.css';
 
 /**
  * Login form component for user authentication.
- * - Manages credentials state and interaction.
- * - Synchronizes global auth state via useAuth on success.
- * - Redirects based on user role (Admin vs User).
+ * - Delegates auth to AuthProvider.login() which calls Supabase directly.
+ * - AuthProvider.onAuthStateChange handles setting user state after success.
+ * - Redirects based on user role after the provider updates user state.
  * @returns {JSX.Element} The rendered login form.
  */
 const LoginForm = () => {
   const { showToast } = useToast();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
   const [errorData, setErrorData] = useState({
     message: '',
     errors: [],
-    status: null,
+    isAuthError: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
    * Updates local state and clears errors on input change.
@@ -35,56 +35,56 @@ const LoginForm = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errorData.message) {
-      setErrorData({ message: '', errors: [], status: null });
+      setErrorData({ message: '', errors: [], isAuthError: false });
     }
   };
 
   /**
-   * Processes form submission, validation, and API authentication.
+   * Processes form submission via AuthProvider.login().
    * @param {React.FormEvent} e
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate inputs locally before hitting API
+    // Client-side validation before hitting Supabase
     const validation = loginSchema.safeParse(formData);
     if (!validation.success) {
       setErrorData({
         message: 'Invalid credentials format',
         errors: validation.error.issues.map((i) => ({ msg: i.message })),
-        status: 400,
+        isAuthError: false,
       });
+      return;
     }
 
+    setIsSubmitting(true);
+
     try {
-      const response = await authApi.login(formData);
+      const { error } = await login(formData);
 
-      if (response.ok) {
-        const data = await response.json();
-
-        // Update global auth context
-        login(data.user);
-        showToast('Successfully logged in', 'success');
-
-        // Access role from the user object
-        const userRole = data.user?.role;
-        const isAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
-
-        navigate(isAdmin ? '/admin-dashboard' : '/dashboard');
-      } else {
-        const errorBody = await response.json();
+      if (error) {
         setErrorData({
-          message: errorBody.message || 'Login failed',
-          errors: errorBody.errors || [],
-          status: response.status,
+          message: error.message || 'Login failed',
+          errors: [],
+          isAuthError: true,
         });
+        return;
       }
+
+      showToast('Successfully logged in', 'success');
+
+      // user state is set by AuthProvider via onAuthStateChange
+      // Navigate based on role — re-read from the updated context
+      const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+      navigate(isAdmin ? '/admin-dashboard' : '/dashboard');
     } catch (err) {
       setErrorData({
         message: `Connection error: ${err.message}`,
         errors: [],
-        status: 500,
+        isAuthError: false,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -93,7 +93,7 @@ const LoginForm = () => {
       <h2>Log In</h2>
 
       {/* Conditional Error Feedback */}
-      {errorData.status === 401 ? (
+      {errorData.isAuthError ? (
         <AuthenticationError message={errorData.message} />
       ) : (
         <ValidationError
@@ -127,8 +127,12 @@ const LoginForm = () => {
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Enter
+        <button
+          type="submit"
+          className={styles.submitBtn}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Logging in...' : 'Enter'}
         </button>
       </form>
 

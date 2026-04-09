@@ -1,62 +1,54 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { supabase } from '../../../lib/supabase.js';
 
 /**
- * Service for authentication-related API calls.
- * - Mirrors the backend auth controller functionality.
- * - Centralizes fetch configuration and credential handling.
+ * Service for authentication-related calls via Supabase Auth SDK.
+ * - Replaces all previous fetch-based Express auth endpoints.
+ * - Return shapes are { data, error } from Supabase — callers handle both.
  */
 export const authApi = {
   /**
-   * Sends registration data to the server.
+   * Registers a new user via Supabase Auth.
+   * - Email is derived from username using the app.local convention.
+   * - Username is stored in user_metadata so the DB trigger can read it.
    * @param {Object} userData - Contains username and password.
-   * @returns {Promise<Response>}
+   * @returns {Promise<{ data, error }>}
    */
-  signup: async (userData) => {
-    // Execute Registration Request with credentials to allow guard clearance
-    return fetch(`${BASE_URL}/api/auth/sign-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(userData),
+  signup: async ({ username, password }) => {
+    return supabase.auth.signUp({
+      email: `${username}@app.local`,
+      password,
+      options: {
+        data: { username },
+      },
     });
   },
 
   /**
-   * Authenticates user and establishes session cookie.
+   * Authenticates a user via Supabase Auth.
+   * - Email is derived from username using the app.local convention.
    * @param {Object} credentials - Contains username and password.
-   * @returns {Promise<Response>}
+   * @returns {Promise<{ data, error }>}
    */
-  login: async (credentials) => {
-    // Execute Login Request With Credentials To Capture Secure Cookie
-    return fetch(`${BASE_URL}/api/auth/log-in`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(credentials),
+  login: async ({ username, password }) => {
+    return supabase.auth.signInWithPassword({
+      email: `${username}@app.local`,
+      password,
     });
   },
 
   /**
-   * Clears the authentication session on the server.
-   * @returns {Promise<Response>}
+   * Signs the current user out and clears the local session.
+   * @returns {Promise<{ error }>}
    */
   logout: async () => {
-    // Execute Logout Request To Destroy HttpOnly Cookie
-    return fetch(`${BASE_URL}/api/auth/log-out`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    return supabase.auth.signOut();
   },
 
   /**
-   * Verifies current session validity.
-   * @returns {Promise<Response>}
+   * Returns the current session if one exists.
+   * @returns {Promise<{ data: { session }, error }>}
    */
   checkStatus: async () => {
-    // Execute Identity Check Request
-    return fetch(`${BASE_URL}/api/auth/me`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    return supabase.auth.getSession();
   },
 };
