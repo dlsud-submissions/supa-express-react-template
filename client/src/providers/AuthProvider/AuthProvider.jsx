@@ -1,82 +1,99 @@
-import { createContext, useState, useEffect, useContext } from 'react';
-import { authApi } from '../../modules/api/auth/auth.api.js';
-import { useToast } from '../ToastProvider/ToastProvider';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase.js';
 
 const AuthContext = createContext(null);
 
 /**
  * Provider component for authentication state and actions.
- * - Manages the 'user' object, 'loading' status, and global 'authError'.
- * - Syncs auth state with the backend on mount.
+ * - Subscribes to Supabase onAuthStateChange for real-time session sync.
+ * - On SIGNED_IN: fetches the user's public.users profile row for role data.
+ * - On SIGNED_OUT: clears all user state.
+ * - Rehydrates session from localStorage on mount via getSession().
  * @param {Object} props
  * @param {React.ReactNode} props.children
  * @returns {JSX.Element}
  */
 export const AuthProvider = ({ children }) => {
-  // Access toast system for notifications
-  const { showToast } = useToast();
-
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    checkAuthStatus();
+    // Rehydrate session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Subscribe to auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await fetchProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setAuthError(null);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   /**
-   * Pings the server to verify if a valid session cookie exists.
-   * - Clears error on success.
-   * - Sets error message and triggers toast on 401/failure.
+   * Fetches the user's row from public.users to get username and role.
+   * @param {string} userId - The auth.users UUID.
    */
-  const checkAuthStatus = async () => {
+  const fetchProfile = async (userId) => {
     try {
-      const response = await authApi.checkStatus();
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, role, created_at, last_login')
+        .eq('id', userId)
+        .single();
 
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-        setAuthError(null);
-      } else if (response.status === 401) {
-        setUser(null);
-        // Apply session expiration message for test compliance
-        const msg = 'Your session has expired. Please log in again.';
-        setAuthError(msg);
-        showToast(msg, 'error');
-      }
+      if (error) throw error;
+
+      setUser(data);
+      setAuthError(null);
     } catch (err) {
       setUser(null);
-      setAuthError('Unable to connect to authentication server.');
+      setAuthError('Failed to load user profile.');
     } finally {
       setLoading(false);
     }
   };
 
   /**
-   * Updates global state after successful login.
-   * @param {Object} userData
+   * Signs in via Supabase Auth.
+   * - onAuthStateChange handles setting user state after success.
+   * @param {Object} credentials - { username, password }
+   * @returns {Promise<{ error }>}
    */
-  const login = (userData) => {
-    setUser(userData);
+  const login = async ({ username, password }) => {
     setAuthError(null);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: `${username}@app.local`,
+      password,
+    });
+    if (error) setAuthError(error.message);
+    return { error };
   };
 
   /**
-   * Resets global state after logout.
+   * Signs out via Supabase Auth.
+   * - onAuthStateChange handles clearing user state after success.
    */
   const logout = async () => {
-    try {
-      await authApi.logout();
-    } catch (err) {
-      console.error('Remote logout failed, clearing local state only:', err);
-    } finally {
-      setUser(null);
-      setAuthError(null);
-    }
+    await supabase.auth.signOut();
   };
 
   /**
-   * Manually clear the global auth error.
+   * Manually clears the global auth error.
    */
   const clearAuthError = () => {
     setAuthError(null);
@@ -100,7 +117,7 @@ export const AuthProvider = ({ children }) => {
 
 /**
  * Custom hook to access authentication context.
- * @returns {Object} { user, loading, authError, login, logout, clearAuthError }
+ * @returns {{ user, loading, authError, login, logout, clearAuthError }}
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
