@@ -1,19 +1,24 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, waitFor } from '../../../modules/utils/testing/testing.utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  render,
+  screen,
+  waitFor,
+} from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import UserManagementPage from './UserManagementPage';
 
-// Mock AuthProvider to control auth state and prevent internal side effects
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
-// Mock adminApi locally since fetch is abstracted away from the component
 vi.mock('../../../modules/api/admin/admin.api', () => ({
   adminApi: {
     getAllUsers: vi.fn(),
@@ -23,10 +28,34 @@ vi.mock('../../../modules/api/admin/admin.api', () => ({
 import { adminApi } from '../../../modules/api/admin/admin.api';
 
 describe('UserManagementPage Component', () => {
-  it('shows loading state initially', async () => {
+  // Supabase returns snake_case column names
+  const mockUsers = [
+    {
+      id: 'uuid-1',
+      username: 'alice',
+      role: 'USER',
+      created_at: '2024-01-01T00:00:00Z',
+    },
+    {
+      id: 'uuid-2',
+      username: 'bob',
+      role: 'ADMIN',
+      created_at: '2024-02-01T00:00:00Z',
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useAuth).mockReturnValue({
+      user: { id: 'uuid-99', role: 'SUPER_ADMIN' },
+    });
+  });
+
+  it('shows loading state initially', () => {
     // --- Arrange ---
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 1, role: 'ADMIN' } });
-    vi.mocked(adminApi.getAllUsers).mockImplementation(() => new Promise(() => {}));
+    vi.mocked(adminApi.getAllUsers).mockImplementation(
+      () => new Promise(() => {})
+    );
 
     // --- Act ---
     render(<UserManagementPage />);
@@ -35,16 +64,11 @@ describe('UserManagementPage Component', () => {
     expect(screen.getByText(/loading user records/i)).toBeInTheDocument();
   });
 
-  it('renders user count after successful fetch', async () => {
+  it('renders user count and usernames after successful fetch', async () => {
     // --- Arrange ---
-    const mockUsers = [
-      { id: 1, username: 'user1', role: 'USER' },
-      { id: 2, username: 'user2', role: 'USER' },
-    ];
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 99, role: 'ADMIN' } });
     vi.mocked(adminApi.getAllUsers).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ users: mockUsers }),
+      data: mockUsers,
+      error: null,
     });
 
     // --- Act ---
@@ -52,21 +76,74 @@ describe('UserManagementPage Component', () => {
 
     // --- Assert ---
     await waitFor(() => {
-      const statsElement = screen.getByText(/total users:/i);
-      expect(statsElement).toHaveTextContent('Total Users: 2');
+      expect(screen.getByText(/total users: 2/i)).toBeInTheDocument();
+      expect(screen.getByText('alice')).toBeInTheDocument();
+      expect(screen.getByText('bob')).toBeInTheDocument();
     });
   });
 
-  it('displays error state on network failure', async () => {
+  it('shows zero count when data is empty array', async () => {
     // --- Arrange ---
-    vi.mocked(useAuth).mockReturnValue({ user: { id: 1, role: 'ADMIN' } });
-    vi.mocked(adminApi.getAllUsers).mockResolvedValueOnce({ ok: false });
+    vi.mocked(adminApi.getAllUsers).mockResolvedValueOnce({
+      data: [],
+      error: null,
+    });
 
     // --- Act ---
     render(<UserManagementPage />);
 
     // --- Assert ---
-    const errorMsg = await screen.findByText(/failed to retrieve user directory/i);
-    expect(errorMsg).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/total users: 0/i)).toBeInTheDocument();
+      expect(screen.getByText(/no users found/i)).toBeInTheDocument();
+    });
+  });
+
+  it('displays error state when API returns an error', async () => {
+    // --- Arrange ---
+    vi.mocked(adminApi.getAllUsers).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Failed to retrieve user directory.' },
+    });
+
+    // --- Act ---
+    render(<UserManagementPage />);
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(
+        screen.getByText(/failed to retrieve user directory/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('shows retry button on error and re-fetches on click', async () => {
+    // --- Arrange ---
+    vi.mocked(adminApi.getAllUsers)
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: 'Network error' },
+      })
+      .mockResolvedValueOnce({
+        data: mockUsers,
+        error: null,
+      });
+
+    const { getByRole } = render(<UserManagementPage />);
+
+    // Wait for error state
+    await waitFor(() => {
+      expect(screen.getByText(/network error/i)).toBeInTheDocument();
+    });
+
+    // --- Act ---
+    const retryBtn = getByRole('button', { name: /retry fetch/i });
+    retryBtn.click();
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(screen.getByText(/total users: 2/i)).toBeInTheDocument();
+    });
+    expect(adminApi.getAllUsers).toHaveBeenCalledTimes(2);
   });
 });

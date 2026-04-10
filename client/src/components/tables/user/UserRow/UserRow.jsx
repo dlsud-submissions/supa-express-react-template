@@ -1,17 +1,16 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { adminApi } from '../../../../modules/api/admin/admin.api';
 import { useAuth } from '../../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../../providers/ToastProvider/ToastProvider';
-import { adminApi } from '../../../../modules/api/admin/admin.api';
 import ConfirmationModal from '../../../feedback/modals/ConfirmationModal/ConfirmationModal';
 import UserRowActions from '../UserRowActions/UserRowActions';
 import styles from './UserRow.module.css';
 
 /**
  * Table row for user management.
- * - Displays identity, role, and metadata.
- * - Delegates action menu rendering to UserRowActions.
- * - Owns role change state and API calls.
- * @param {Object} props - Component properties.
+ * - Consumes { data, error } from adminApi (Supabase CRUD).
+ * - Column keys updated to snake_case to match Supabase response shape.
+ * @param {Object} props
  * @param {Object} props.user - The target user object for this row.
  * @param {function} props.onUpdate - Callback to refresh the list after a role change.
  * @returns {JSX.Element}
@@ -20,7 +19,6 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
   const { user: currentUser } = useAuth();
   const { showToast } = useToast();
 
-  // Track which action is pending confirmation: null | 'promote' | 'demote'
   const [pendingAction, setPendingAction] = useState(null);
 
   const canPromote =
@@ -29,11 +27,6 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
   const canDemote =
     currentUser?.role === 'SUPER_ADMIN' && targetUser.role === 'ADMIN';
 
-  /**
-   * Executes the confirmed role change action via Admin API.
-   * - Calls promote or demote based on pendingAction state.
-   * - Triggers onUpdate callback to refresh the list in place.
-   */
   const handleConfirmAction = async () => {
     const isPromote = pendingAction === 'promote';
     const apiCall = isPromote
@@ -49,13 +42,13 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
     setPendingAction(null);
 
     try {
-      const response = await apiCall;
+      const { error } = await apiCall;
 
-      if (response.ok) {
+      if (error) {
+        showToast(errorMsg, 'error');
+      } else {
         showToast(successMsg, 'success');
         onUpdate();
-      } else {
-        showToast(errorMsg, 'error');
       }
     } catch {
       showToast('An unexpected error occurred', 'error');
@@ -91,7 +84,8 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
         </td>
         <td className={styles.cell}>
           <span className={styles.date}>
-            {new Date(targetUser.createdAt).toLocaleDateString()}
+            {/* Supabase returns created_at in snake_case */}
+            {new Date(targetUser.created_at).toLocaleDateString()}
           </span>
         </td>
         <td className={`${styles.cell} ${styles.actionsArea}`}>

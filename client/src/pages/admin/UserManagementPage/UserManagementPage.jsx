@@ -1,41 +1,35 @@
-import { useState, useEffect } from 'react';
-import { Users, RefreshCw } from 'lucide-react';
-import { adminApi } from '../../../modules/api/admin/admin.api';
+import { RefreshCw, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import Spinner from '../../../components/feedback/Spinner/Spinner';
 import TableContainer from '../../../components/tables/TableContainer/TableContainer';
 import UserRow from '../../../components/tables/user/UserRow/UserRow';
-import Spinner from '../../../components/feedback/Spinner/Spinner';
+import { adminApi } from '../../../modules/api/admin/admin.api';
 import styles from './UserManagementPage.module.css';
 
 /**
  * Administrative User Management Page.
- * - Synchronizes with /api/admin/users.
- * - Handles asynchronous states: loading, error, and success.
- * - Uses Lucide icons for status and actions.
- * @returns {JSX.Element} The rendered user management view.
+ * - Synchronizes with Supabase public.users via adminApi.
+ * - Consumes { data, error } return shape from Supabase CRUD.
+ * @returns {JSX.Element}
  */
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  /**
-   * Fetches user data from the server.
-   * - Extracts the users array from the wrapped response object.
-   * - Manages loading and error states during the request lifecycle.
-   */
   const fetchUsers = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const response = await adminApi.getAllUsers();
+      const { data, error: apiError } = await adminApi.getAllUsers();
 
-      if (!response.ok) {
-        throw new Error('Failed to retrieve user directory.');
-      }
+      if (apiError)
+        throw new Error(
+          apiError.message || 'Failed to retrieve user directory.'
+        );
 
-      const data = await response.json();
-      setUsers(data.users || []);
+      setUsers(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
