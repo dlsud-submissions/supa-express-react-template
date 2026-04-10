@@ -1,31 +1,43 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { supabase } from '../../../lib/supabase.js';
 
 /**
- * Service for user-related API calls.
- * - Handles profile retrieval.
+ * Service for user-related queries via Supabase.
+ * - Replaces fetch-based Express /api/user/* endpoints.
+ * - Return shapes are { data, error } from Supabase — callers handle both.
  */
 export const userApi = {
   /**
-   * Fetches profile details for the authenticated user.
-   * @returns {Promise<Response>}
+   * Fetches the profile row for the currently authenticated user.
+   * - Reads auth.uid() from the active session; RLS enforces ownership.
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
    */
   getProfile: async () => {
-    return fetch(`${BASE_URL}/api/user/profile`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return { data: null, error: { message: 'No active session' } };
+    }
+
+    return supabase
+      .from('users')
+      .select('id, username, role, created_at, last_login')
+      .eq('id', session.user.id)
+      .single();
   },
 
   /**
-   * Fetches a specific user record by its ID.
-   * Primarily used for admin management views.
-   * @param {number|string} userId
-   * @returns {Promise<Response>}
+   * Fetches a specific user record by UUID.
+   * - RLS restricts this to ADMIN and SUPER_ADMIN roles.
+   * @param {string} userId - The target user's UUID.
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
    */
   getById: async (userId) => {
-    return fetch(`${BASE_URL}/api/user/profile/${userId}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    return supabase
+      .from('users')
+      .select('id, username, role, created_at, last_login')
+      .eq('id', userId)
+      .single();
   },
 };
