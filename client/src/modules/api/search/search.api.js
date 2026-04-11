@@ -1,41 +1,73 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { supabase } from '../../../lib/supabase.js';
+
+// Whitelist of valid sort columns — prevents injection via sort params
+const VALID_SORT_FIELDS = ['username', 'created_at', 'last_login', 'role'];
 
 /**
- * Service for search-related API calls.
- * - Supports section-based search with dynamic filters and sorting.
- * - Serializes all params into a query string for GET requests.
+ * Service for search queries via Supabase.
+ * - Replaces fetch-based Express /api/search endpoint.
+ * - Supports partial username match, role filter, date range, and sort.
+ * - Return shape is { data, error } from Supabase — callers handle both.
  */
 export const searchApi = {
   /**
-   * Searches a specific data section with optional filters and sorting.
-   * @param {Object} params - Search parameters.
-   * @param {string} [params.section='users'] - The data section to search.
-   * @param {string} [params.q=''] - The search query string.
-   * @param {string} [params.sortBy] - Field to sort by.
-   * @param {string} [params.sortDir] - Sort direction ('asc' | 'desc').
-   * @param {Object} [params.filters] - Section-specific filter key/value pairs.
-   * @returns {Promise<Response>}
+   * Searches users with optional filters and sorting.
+   * @param {Object} params
+   * @param {string} [params.section='users'] - Data section (only 'users' currently).
+   * @param {string} [params.q=''] - Partial username to search (case-insensitive).
+   * @param {string} [params.role] - Role filter (USER | ADMIN | SUPER_ADMIN).
+   * @param {string} [params.joinedAfter] - ISO date string — include users joined on or after.
+   * @param {string} [params.joinedBefore] - ISO date string — include users joined on or before.
+   * @param {string} [params.sortBy='created_at'] - Column to sort by (whitelisted).
+   * @param {string} [params.sortDir='desc'] - Sort direction ('asc' | 'desc').
+   * @returns {Promise<{ data: Array|null, error: Object|null }>}
    */
   search: async ({
     section = 'users',
     q = '',
-    sortBy,
-    sortDir,
-    ...filters
+    role,
+    joinedAfter,
+    joinedBefore,
+    sortBy = 'created_at',
+    sortDir = 'desc',
   } = {}) => {
-    // Build params object, stripping undefined values
-    const params = {
-      section,
-      q,
-      ...(sortBy && { sortBy }),
-      ...(sortDir && { sortDir }),
-      ...filters,
-    };
+    // Only 'users' section is supported currently
+    if (section !== 'users') {
+      return {
+        data: null,
+        error: { message: `Invalid section: '${section}'` },
+      };
+    }
 
-    // Serialize to query string
-    return fetch(`${BASE_URL}/api/search?${new URLSearchParams(params)}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    // Whitelist sort column
+    const safeSortBy = VALID_SORT_FIELDS.includes(sortBy)
+      ? sortBy
+      : 'created_at';
+    const ascending = sortDir === 'asc';
+
+    let query = supabase
+      .from('users')
+      .select('id, username, role, created_at, last_login')
+      .order(safeSortBy, { ascending });
+
+    // Partial username match — ilike is case-insensitive
+    if (q) {
+      query = query.ilike('username', `%${q}%`);
+    }
+
+    // Role filter
+    if (role) {
+      query = query.eq('role', role);
+    }
+
+    // Date range filters — start of day / end of day in UTC
+    if (joinedAfter) {
+      query = query.gte('created_at', `${joinedAfter}T00:00:00.000Z`);
+    }
+    if (joinedBefore) {
+      query = query.lte('created_at', `${joinedBefore}T23:59:59.999Z`);
+    }
+
+    return query;
   },
 };

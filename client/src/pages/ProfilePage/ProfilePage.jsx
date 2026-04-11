@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { Calendar, Hash, LogIn } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
-import { Hash, Calendar, LogIn } from 'lucide-react';
-import { useAuth } from '../../providers/AuthProvider/AuthProvider';
 import { userApi } from '../../modules/api/user/user.api';
+import { useAuth } from '../../providers/AuthProvider/AuthProvider';
 import styles from './ProfilePage.module.css';
 
 /**
  * User Profile Page.
  * - Displays account details for the current user or a targeted user.
+ * - Consumes { data, error } from userApi (Supabase CRUD).
  * @returns {JSX.Element}
  */
 const ProfilePage = () => {
@@ -22,14 +23,15 @@ const ProfilePage = () => {
     const loadProfile = async () => {
       try {
         setIsLoading(true);
-        const response = id
+
+        const { data, error: apiError } = id
           ? await userApi.getById(id)
           : await userApi.getProfile();
 
-        if (!response.ok) throw new Error('User profile not found');
+        if (apiError)
+          throw new Error(apiError.message || 'User profile not found');
 
-        const data = await response.json();
-        setProfileUser(data.user || data);
+        setProfileUser(data);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -57,7 +59,6 @@ const ProfilePage = () => {
         </div>
 
         <div className={styles.detailsGrid}>
-          {/* User ID */}
           <div className={styles.detailItem}>
             <div className={styles.detailIcon}>
               <Hash size={16} /> :
@@ -65,26 +66,24 @@ const ProfilePage = () => {
             <span className={styles.detailValue}>{profileUser.id}</span>
           </div>
 
-          {/* Join Date */}
           <div className={styles.detailItem}>
             <div className={styles.detailIcon}>
               <Calendar size={16} /> :
             </div>
             <span className={styles.detailValue}>
-              {profileUser.createdAt
-                ? new Date(profileUser.createdAt).toLocaleDateString()
+              {profileUser.created_at
+                ? new Date(profileUser.created_at).toLocaleDateString()
                 : 'N/A'}
             </span>
           </div>
 
-          {/* Last Login */}
           <div className={styles.detailItem}>
             <div className={styles.detailIcon}>
               <LogIn size={16} /> :
             </div>
             <span className={styles.detailValue}>
-              {profileUser.lastLogin
-                ? new Date(profileUser.lastLogin).toLocaleString()
+              {profileUser.last_login
+                ? new Date(profileUser.last_login).toLocaleString()
                 : 'Never'}
             </span>
           </div>

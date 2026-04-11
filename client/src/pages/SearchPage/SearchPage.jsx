@@ -1,16 +1,16 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
-import { searchApi } from '../../modules/api/search/search.api';
-import { sectionConfig } from '../../config/searchConfig';
-import SearchSidebar from '../../components/search/SearchSidebar/SearchSidebar';
-import SearchControls from '../../components/search/SearchControls/SearchControls';
+import Spinner from '../../components/feedback/Spinner/Spinner';
 import SearchActiveFilters from '../../components/search/SearchActiveFilters/SearchActiveFilters';
+import SearchControls from '../../components/search/SearchControls/SearchControls';
+import SearchSidebar from '../../components/search/SearchSidebar/SearchSidebar';
 import TableContainer from '../../components/tables/TableContainer/TableContainer';
 import UserRow from '../../components/tables/user/UserRow/UserRow';
-import Spinner from '../../components/feedback/Spinner/Spinner';
+import { sectionConfig } from '../../config/searchConfig';
+import { searchApi } from '../../modules/api/search/search.api';
 import styles from './SearchPage.module.css';
 
-// Map section keys to their row renderer — extend as new sections are added
+// Map section keys to their row renderer
 const rowRenderers = {
   users: (item, onUpdate) => (
     <UserRow key={item.id} user={item} onUpdate={onUpdate} />
@@ -19,8 +19,8 @@ const rowRenderers = {
 
 /**
  * Search page — all state lives in the URL via useSearchParams.
- * - section, q, sortBy, sortDir, view, and filter values are URL params.
- * - Fires a new API call whenever params change.
+ * - Consumes { data, error } from searchApi (Supabase CRUD).
+ * - URL-state behaviour (section, q, sort, filters) is unchanged.
  * @returns {JSX.Element}
  */
 const SearchPage = () => {
@@ -34,7 +34,6 @@ const SearchPage = () => {
 
   const cfg = sectionConfig[activeSection];
 
-  // Rebuild activeFilters from URL params on every render
   const activeFilters = Object.fromEntries(
     cfg.filters.map((f) => [f.key, searchParams.get(f.key) || ''])
   );
@@ -45,9 +44,6 @@ const SearchPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Fires the search API and updates results state.
-   */
   const runSearch = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -55,16 +51,17 @@ const SearchPage = () => {
       const activeFilterParams = Object.fromEntries(
         Object.entries(activeFilters).filter(([, v]) => v)
       );
-      const response = await searchApi.search({
+
+      const { data, error: apiError } = await searchApi.search({
         section: activeSection,
         q,
         ...(sortBy && { sortBy, sortDir }),
         ...activeFilterParams,
       });
 
-      if (!response.ok) throw new Error('Search failed');
-      const data = await response.json();
-      setResults(data.results || []);
+      if (apiError) throw new Error(apiError.message || 'Search failed');
+
+      setResults(data || []);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,10 +73,6 @@ const SearchPage = () => {
     runSearch();
   }, [runSearch]);
 
-  /**
-   * Merges updates into current URL params, deleting null/empty values.
-   * @param {Object} updates
-   */
   const updateParams = (updates) => {
     const next = new URLSearchParams(searchParams);
     Object.entries(updates).forEach(([k, v]) => {
@@ -93,7 +86,6 @@ const SearchPage = () => {
   };
 
   const handleSectionChange = (section) => {
-    // Clear filters and sort when switching sections; preserve q and view
     setSearchParams({ section, q, view: activeView });
   };
 

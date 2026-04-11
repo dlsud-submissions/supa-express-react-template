@@ -1,45 +1,49 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { supabase } from '../../../lib/supabase.js';
 
 /**
- * Service for administrative API calls.
- * - Handles user management and role modification.
+ * Service for administrative queries via Supabase.
+ * - Replaces fetch-based Express /api/admin/* endpoints.
+ * - Return shapes are { data, error } from Supabase — callers handle both.
+ * - RLS on public.users ensures only ADMIN/SUPER_ADMIN can read all rows.
+ * - Role updates are restricted to SUPER_ADMIN by RLS policy.
  */
 export const adminApi = {
   /**
-   * Fetches all users for the management dashboard.
-   * @returns {Promise<Response>}
+   * Fetches all users ordered by creation date ascending.
+   * @returns {Promise<{ data: Array|null, error: Object|null }>}
    */
   getAllUsers: async () => {
-    // GET request to retrieve user list
-    return fetch(`${BASE_URL}/api/admin/users`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    return supabase
+      .from('users')
+      .select('id, username, role, created_at')
+      .order('created_at', { ascending: true });
   },
 
   /**
    * Promotes a user to ADMIN role.
-   * @param {number|string} userId
-   * @returns {Promise<Response>}
+   * @param {string} userId - The target user's UUID.
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
    */
   promoteUser: async (userId) => {
-    // POST request to promote specific ID
-    return fetch(`${BASE_URL}/api/admin/users/${userId}/promote`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    return supabase
+      .from('users')
+      .update({ role: 'ADMIN' })
+      .eq('id', userId)
+      .select()
+      .single();
   },
 
   /**
-   * Demotes an admin to USER role.
-   * @param {number|string} userId
-   * @returns {Promise<Response>}
+   * Demotes a user back to USER role.
+   * @param {string} userId - The target user's UUID.
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
    */
   demoteUser: async (userId) => {
-    // POST request to demote specific ID
-    return fetch(`${BASE_URL}/api/admin/users/${userId}/demote`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    return supabase
+      .from('users')
+      .update({ role: 'USER' })
+      .eq('id', userId)
+      .select()
+      .single();
   },
 };
