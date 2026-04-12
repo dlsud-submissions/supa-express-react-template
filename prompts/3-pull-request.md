@@ -2,11 +2,12 @@
 
 <!-- Provide the following:
 Branch name: feat/cage-availability-tracking
-Target branch: dev (or main for hotfixes)
+Target branch: main (or dev if applicable)
 Summary of change: what you did and why
 Key implementation details (for the How section)
 Testing done:
-Related issue(s): #18 -->
+Related issue(s): #18
+Milestone: e.g. Sprint 2 — Appointment Booking -->
 
 ---
 
@@ -15,19 +16,62 @@ Related issue(s): #18 -->
 1. Generate a PR title following the title rules below.
 2. Generate the full PR body using the required sections below.
 3. Recommend the appropriate label(s).
-4. Generate a merge commit message to be used when squash-merging
+4. Output the Milestone and Development fields separately — these are
+   GitHub GUI fields set outside the PR body, not written into it.
+5. Generate a merge commit message to be used when squash-merging
    the PR into the target branch.
 
 ---
 
 # RULES:
 
-## PR Title
+## General Rules
+
+- PRs must be atomic — one concern per PR
+- Target `main` for all work (skipping `dev` for this template repo)
+- Request at least one reviewer before merging
+- Do not merge your own PR without a review except in emergencies
+
+## GitHub GUI Fields (set outside the PR body)
+
+### PR Title
 
 - Mirrors the commit subject line format: `<type>(<scope>): <subject>`
 - Max 72 characters
 - Imperative mood, no period at the end
 - Must be specific enough to understand the change at a glance
+
+### Labels
+
+Use one or more:
+
+- `feature` → new functionality
+- `bug` → bug fix
+- `hotfix` → urgent production fix
+- `chore` → maintenance, dependencies, config
+- `refactor` → structural change, no behavior change
+- `docs` → documentation only
+- `test` → test additions or changes
+- `breaking` → includes a breaking change
+
+### Milestone
+
+- Maps to the GitHub Milestone field in the PR sidebar
+- Format: `<Sprint name> — <focus area>`
+- Example: `Sprint 2 — Appointment Booking`
+- Use `Backlog` if not assigned to a sprint
+
+### Development (Linked Issues)
+
+- Maps to the GitHub Development field in the PR sidebar
+- Format: `Closes #<issue>`
+- List one issue per line if multiple
+
+### Merge Commit Message (for squash merge)
+
+- Format: `<type>(<scope>): <subject> (#<PR number>)`
+- Used when squash-merging to keep a clean linear history on `main`
+- The PR number links the merge commit back to the full discussion
 
 ## PR Body Sections
 
@@ -38,6 +82,11 @@ pre-fill the body when you open a PR. Fill in each section:
 
 - One sentence covering both what and why
 - Written for someone scanning a list of PRs
+
+### What Changed
+
+- Brief bullet list of key files or components touched and why
+- Not exhaustive — focus on what matters to a reviewer
 
 ### What
 
@@ -58,36 +107,11 @@ pre-fill the body when you open a PR. Fill in each section:
   because the code already shows it
 - Do not list every file changed — list decisions, not a file index
 
-### Related
+### Testing
 
-- Fill in `Closes #<issue>` in the Linked Issue field
-- Link related PRs in the body if applicable
-
-## Labels
-
-Use one or more:
-
-- `feature` → new functionality
-- `bug` → bug fix
-- `hotfix` → urgent production fix
-- `chore` → maintenance, dependencies, config
-- `refactor` → structural change, no behavior change
-- `docs` → documentation only
-- `test` → test additions or changes
-- `breaking` → includes a breaking change
-
-## Merge Commit Message (for squash merge)
-
-- Format: `<type>(<scope>): <subject> (#<PR number>)`
-- Used when squash-merging to keep a clean linear history on `dev`/`main`
-- The PR number links the merge commit back to the full discussion
-
-## General Rules
-
-- PRs must be atomic — one concern per PR
-- Target `dev` for all regular work; `main` only for hotfixes
-- Request at least one reviewer before merging
-- Do not merge your own PR without a review except in emergencies
+- Describe how the change was verified
+- Include manual steps, automated tests, or both
+- Mention edge cases tested if relevant
 
 ---
 
@@ -99,7 +123,7 @@ feat(booking): add real-time cage availability tracking
 
 ### BASE BRANCH
 
-dev
+main
 
 ### COMPARE BRANCH
 
@@ -109,49 +133,70 @@ feat/cage-availability-tracking
 
 feature
 
+### MILESTONE
+
+Sprint 2 — Appointment Booking
+
+### DEVELOPMENT
+
+Closes #18
+
 ### PR BODY
 
 ```
 ## Summary
 
-<!-- One sentence: what does this PR do? -->
+Adds live cage availability checks at booking confirmation to prevent
+overbooking when all cages for a given size category are occupied.
 
-## Linked Issue
+## Type of Change
 
-<!-- Required — every PR should close an issue -->
+- [x] `feat` — new feature
 
-Closes #
+## Scope
+
+booking
 
 ## What Changed
 
-<!-- Briefly list key files or components touched and why -->
-
--
--
+- `cageAvailability.ts` — new service that queries cage occupancy
+- `BookingPage.tsx` — calls availability check before confirming
 
 ## Screenshots / Demo
 
-<!-- For UI changes, paste a screenshot or screen recording. Delete this section if not applicable. -->
+<!-- Delete this section if not applicable -->
 
 ---
 
 ## What
 
-<!-- What does this PR introduce or change? -->
+This PR introduces a real-time cage availability check at the booking
+confirmation step so receptionists can no longer double-book cages.
 
 ## Why
 
-<!-- What problem does this solve? -->
+Receptionists had no visibility into cage occupancy before confirming
+a hotel booking, causing manual overbooking errors across both branches.
 
 ## How
 
-<!-- Key implementation decisions and trade-offs -->
+- Availability is checked server-side at confirmation time, not on page
+  load, to avoid stale reads from concurrent bookings
+- The check is scoped to size category (Small / Medium / Large) rather
+  than individual cage IDs to match how receptionists think about capacity
+
+## Testing
+
+- Manually verified that a booking confirmation is blocked when all
+  cages of the selected size are occupied
+- Tested concurrent booking scenario by opening two sessions and
+  confirming from both — second confirmation correctly shows no cages
 
 ---
 
 ## Pre-Merge Checklist
 
-- [ ] Synced with `dev` before opening this PR (`git fetch origin && git merge origin/dev`)
+- [ ] Synced with `main` before opening this PR (`git fetch origin && git merge origin/main`)
 - [ ] All tests pass locally (`npm test` in both `client/` and `server/`)
 - [ ] No `console.log` left in production code
 - [ ] Self-reviewed my own diff before requesting review

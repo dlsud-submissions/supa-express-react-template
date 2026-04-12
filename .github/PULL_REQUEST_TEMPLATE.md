@@ -2,12 +2,6 @@
 
 <!-- One sentence: what does this PR do? -->
 
-## Linked Issue
-
-<!-- Required — every PR should close an issue -->
-
-Closes #
-
 ## What Changed
 
 <!-- Briefly list key files or components touched and why -->
@@ -33,11 +27,15 @@ Closes #
 
 <!-- Key implementation decisions and trade-offs -->
 
+## Testing
+
+<!-- How was this verified? Include manual steps or automated tests -->
+
 ---
 
 ## Pre-Merge Checklist
 
-- [ ] Synced with `dev` before opening this PR (`git fetch origin && git merge origin/dev`)
+- [ ] Synced with `main` before opening this PR (`git fetch origin && git merge origin/main`)
 - [ ] All tests pass locally (`npm test` in both `client/` and `server/`)
 - [ ] No `console.log` left in production code
 - [ ] Self-reviewed my own diff before requesting review
