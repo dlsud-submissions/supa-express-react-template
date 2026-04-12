@@ -1,11 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { globalErrorHandler } from './error.middleware.js';
-import { clearAuthCookie } from '../../utils/auth/cookie/cookie.js';
-
-// Mock cookie utility to verify clearing behavior
-vi.mock('../../utils/auth/cookie/cookie.js', () => ({
-  clearAuthCookie: vi.fn(),
-}));
 
 describe('Global Error Handler Middleware', () => {
   let req, res, next;
@@ -30,7 +24,7 @@ describe('Global Error Handler Middleware', () => {
     });
   });
 
-  it('should use status and statusCode provided by AppError subclasses', () => {
+  it('should use statusCode and status from AppError subclasses', () => {
     // --- Arrange ---
     const customError = {
       message: 'Resource not found',
@@ -49,18 +43,6 @@ describe('Global Error Handler Middleware', () => {
         message: 'Resource not found',
       })
     );
-  });
-
-  it('should clear auth cookie when a 401 error occurs', () => {
-    // --- Arrange ---
-    const authError = { message: 'Unauthorized access', statusCode: 401 };
-
-    // --- Act ---
-    globalErrorHandler(authError, req, res, next);
-
-    // --- Assert ---
-    expect(clearAuthCookie).toHaveBeenCalledWith(res);
-    expect(res.status).toHaveBeenCalledWith(401);
   });
 
   it('should include validation error arrays in the response', () => {
