@@ -14,12 +14,12 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "=== DATABASE ===": "",
-    "db:seed": "node src/db/seed.js"
+    "=== CODE QUALITY ===": "",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.45.0",
-    "cookie-parser": "^1.4.7",
+    "@supabase/supabase-js": "^2.49.8",
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.1"
