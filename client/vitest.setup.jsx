@@ -1,6 +1,6 @@
-import { expect, afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
+import { cleanup } from '@testing-library/react';
+import { afterEach, expect, vi } from 'vitest';
 
 expect.extend(matchers);
 
@@ -17,6 +17,52 @@ vi.mock('lucide-react', async () => {
     acc[curr] = () => <div data-testid={`icon-${curr}`} />;
     return acc;
   }, {});
+});
+
+// ---------------------------------------------------------------------------
+// Global Supabase client mock
+// ---------------------------------------------------------------------------
+// Provides a chainable stub for supabase.from() queries and stubs for all
+// supabase.auth.* methods used across the test suite.
+// Individual test files can override specific methods with:
+//   vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce(...)
+// ---------------------------------------------------------------------------
+vi.mock('./src/lib/supabase.js', () => {
+  const queryChain = {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    eq: vi.fn(),
+    neq: vi.fn(),
+    ilike: vi.fn(),
+    gte: vi.fn(),
+    lte: vi.fn(),
+    order: vi.fn(),
+    single: vi.fn(),
+    limit: vi.fn(),
+  };
+
+  // Make every chain method return the chain so calls can be composed
+  Object.keys(queryChain).forEach((key) => {
+    queryChain[key].mockReturnValue(queryChain);
+  });
+
+  return {
+    supabase: {
+      auth: {
+        signUp: vi.fn(),
+        signInWithPassword: vi.fn(),
+        signOut: vi.fn(),
+        getSession: vi.fn(),
+        onAuthStateChange: vi.fn(() => ({
+          data: { subscription: { unsubscribe: vi.fn() } },
+        })),
+      },
+      from: vi.fn(() => queryChain),
+      _queryChain: queryChain,
+    },
+  };
 });
 
 // Initialize Browser API Mocks
@@ -38,8 +84,6 @@ if (typeof window !== 'undefined') {
     },
     writable: true,
   });
-
-  global.fetch = vi.fn();
 
   Object.defineProperty(window, 'location', {
     value: { reload: vi.fn(), assign: vi.fn(), replace: vi.fn() },
