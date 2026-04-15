@@ -1,125 +1,189 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabase } from '../../lib/supabase.js';
+import { ToastProvider } from '../ToastProvider/ToastProvider';
 import { AuthProvider, useAuth } from './AuthProvider';
 
-// Mock Supabase client
-vi.mock('../../lib/supabase.js', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn(),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn(),
-    },
-    from: vi.fn(),
-  },
-}));
+// Unmock the provider to test its actual implementation
+vi.unmock('./AuthProvider');
 
-const TestComponent = () => {
-  const { user, loading, authError } = useAuth();
-  if (loading) return <div data-testid="loading">Loading...</div>;
+/**
+ * Test consumer that exposes auth context values for assertions.
+ */
+const TestConsumer = () => {
+  const { user, authError, clearAuthError, login, logout } = useAuth();
   return (
     <div>
-      <div data-testid="user">{user ? user.username : 'Guest'}</div>
-      <div data-testid="error">{authError || 'No Error'}</div>
+      <span data-testid="user">{user ? user.username : 'Guest'}</span>
+      <span data-testid="error">{authError || 'No Error'}</span>
+      <button onClick={() => login({ username: 'alice', password: 'pw' })}>
+        Login
+      </button>
+      <button onClick={clearAuthError}>Clear Error</button>
+      <button onClick={logout}>Logout</button>
     </div>
   );
+};
+
+/**
+ * Renders the AuthProvider with its required ToastProvider dependency.
+ */
+const renderWithDeps = (ui) =>
+  render(
+    <ToastProvider>
+      <AuthProvider>{ui}</AuthProvider>
+    </ToastProvider>
+  );
+
+/**
+ * Captures the onAuthStateChange callback registered by AuthProvider
+ * so tests can fire synthetic auth events.
+ */
+const captureAuthStateChange = () => {
+  let changeCallback;
+  vi.mocked(supabase.auth.onAuthStateChange).mockImplementation((cb) => {
+    changeCallback = cb;
+    return { data: { subscription: { unsubscribe: vi.fn() } } };
+  });
+  return () => changeCallback;
 };
 
 describe('AuthProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default mock implementation for getSession
-    supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+    // Default: no active session on mount
+    vi.mocked(supabase.auth.getSession).mockResolvedValue({
+      data: { session: null },
+    });
+    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
   });
 
-  it('shows guest state when no session exists on mount', async () => {
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+  it('renders guest state when no session exists on mount', async () => {
+    renderWithDeps(<TestConsumer />);
 
     await waitFor(() => {
-      expect(screen.queryByTestId('loading')).not.toBeInTheDocument();
+      expect(screen.getByTestId('user')).toHaveTextContent('Guest');
     });
-    expect(screen.getByTestId('user')).toHaveTextContent('Guest');
+    expect(screen.getByTestId('error')).toHaveTextContent('No Error');
   });
 
-  it('fetches profile and sets user when session exists on mount', async () => {
-    const mockUser = { id: '123', email: 'test@app.local' };
-    supabase.auth.getSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
+  it('sets user state when SIGNED_IN event fires with a valid profile', async () => {
+    // --- Arrange ---
+    const getCallback = captureAuthStateChange();
+
+    // Mock the public.users profile fetch that happens after SIGNED_IN
+    supabase._queryChain.single.mockResolvedValueOnce({
+      data: { id: 'uuid-1', username: 'alice', role: 'USER' },
+      error: null,
     });
 
-    // Mock the profile fetch from public.users
-    const mockFrom = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockResolvedValue({
-        data: { id: '123', username: 'tester', role: 'admin' },
-        error: null,
-      }),
-    };
-    supabase.from.mockReturnValue(mockFrom);
+    renderWithDeps(<TestConsumer />);
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    // Wait for mount to complete
+    await waitFor(() => expect(getCallback()).toBeDefined());
 
+    // --- Act ---
+    await act(async () => {
+      getCallback()('SIGNED_IN', { user: { id: 'uuid-1' } });
+    });
+
+    // --- Assert ---
     await waitFor(() => {
-      expect(screen.getByTestId('user')).toHaveTextContent('tester');
+      expect(screen.getByTestId('user')).toHaveTextContent('alice');
+    });
+    expect(screen.getByTestId('error')).toHaveTextContent('No Error');
+  });
+
+  it('clears user state on SIGNED_OUT event', async () => {
+    // --- Arrange ---
+    const getCallback = captureAuthStateChange();
+
+    // First sign in
+    supabase._queryChain.single.mockResolvedValueOnce({
+      data: { id: 'uuid-1', username: 'alice', role: 'USER' },
+      error: null,
+    });
+
+    renderWithDeps(<TestConsumer />);
+    await waitFor(() => expect(getCallback()).toBeDefined());
+
+    await act(async () => {
+      getCallback()('SIGNED_IN', { user: { id: 'uuid-1' } });
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('alice');
+    });
+
+    // --- Act ---
+    await act(async () => {
+      getCallback()('SIGNED_OUT', null);
+    });
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('Guest');
     });
   });
 
-  it('updates state when auth event SIGNED_OUT occurs', async () => {
-    let authCallback;
-    supabase.auth.onAuthStateChange.mockImplementation((cb) => {
-      authCallback = cb;
-      return { data: { subscription: { unsubscribe: vi.fn() } } };
+  it('sets authError when login returns a Supabase error', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Invalid login credentials' },
     });
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    renderWithDeps(<TestConsumer />);
 
-    // Manually trigger the signed out event
-    await waitFor(() => authCallback('SIGNED_OUT', null));
+    // --- Act ---
+    await user.click(screen.getByRole('button', { name: /login/i }));
 
-    expect(screen.getByTestId('user')).toHaveTextContent('Guest');
-  });
-
-  it('sets error state when profile fetch fails', async () => {
-    const mockUser = { id: '123' };
-    supabase.auth.getSession.mockResolvedValue({
-      data: { session: { user: mockUser } },
-    });
-
-    supabase.from.mockReturnValue({
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi
-        .fn()
-        .mockResolvedValue({ data: null, error: { message: 'DB Error' } }),
-    });
-
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
+    // --- Assert ---
     await waitFor(() => {
       expect(screen.getByTestId('error')).toHaveTextContent(
-        'Failed to load user profile.'
+        'Invalid login credentials'
       );
     });
+  });
+
+  it('clears authError when clearAuthError is called', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Invalid login credentials' },
+    });
+
+    renderWithDeps(<TestConsumer />);
+
+    await user.click(screen.getByRole('button', { name: /login/i }));
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).not.toHaveTextContent('No Error');
+    });
+
+    // --- Act ---
+    await user.click(screen.getByRole('button', { name: /clear error/i }));
+
+    // --- Assert ---
+    expect(screen.getByTestId('error')).toHaveTextContent('No Error');
+  });
+
+  it('unsubscribes from onAuthStateChange on unmount', async () => {
+    // --- Arrange ---
+    const unsubscribe = vi.fn();
+    vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
+      data: { subscription: { unsubscribe } },
+    });
+
+    const { unmount } = renderWithDeps(<TestConsumer />);
+
+    // --- Act ---
+    unmount();
+
+    // --- Assert ---
+    expect(unsubscribe).toHaveBeenCalled();
   });
 });
