@@ -1,71 +1,124 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { authApi } from '../../../modules/api/auth/auth.api.js';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import SignupForm from './SignupForm';
 
-// Mock the authApi module
+// Mock authApi — SignupForm calls authApi.signup() directly
 vi.mock('../../../modules/api/auth/auth.api.js', () => ({
   authApi: {
     signup: vi.fn(),
   },
 }));
 
-describe('SignupForm', () => {
-  const user = userEvent.setup();
+import { authApi } from '../../../modules/api/auth/auth.api.js';
 
+describe('SignupForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
+  const renderForm = () =>
+    render(
+      <MemoryRouter>
+        <SignupForm />
+      </MemoryRouter>
+    );
+
   it('updates input values on change', async () => {
-    render(
-      <MemoryRouter>
-        <SignupForm />
-      </MemoryRouter>
-    );
+    // --- Arrange ---
+    const user = userEvent.setup();
+    renderForm();
 
-    const usernameInput = screen.getByLabelText(/Username/i);
-    await user.type(usernameInput, 'new_user');
-    expect(usernameInput).toHaveValue('new_user');
+    // --- Act ---
+    const usernameInput = screen.getByLabelText(/username/i);
+    await user.type(usernameInput, 'newuser');
+
+    // --- Assert ---
+    expect(usernameInput).toHaveValue('newuser');
   });
 
-  it('displays error if passwords do not match', async () => {
-    render(
-      <MemoryRouter>
-        <SignupForm />
-      </MemoryRouter>
-    );
+  it('shows validation error when passwords do not match', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    renderForm();
 
-    await user.type(screen.getByLabelText(/Username/i), 'testuser');
-    await user.type(screen.getByLabelText(/^Password/i), 'Pass123!');
-    await user.type(screen.getByLabelText(/Confirm Password/i), 'Wrong123!');
-    await user.click(screen.getByRole('button', { name: /Register/i }));
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/^password/i), 'Password1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Different1');
+    await user.click(screen.getByRole('button', { name: /register/i }));
 
+    // --- Assert ---
     expect(
-      await screen.findByText(/Passwords don't match/i)
+      await screen.findByText(/passwords don't match/i)
     ).toBeInTheDocument();
+    expect(authApi.signup).not.toHaveBeenCalled();
   });
 
-  it('shows error message when Supabase signup fails', async () => {
-    // Mock a failed Supabase response
-    vi.mocked(authApi.signup).mockResolvedValue({
-      data: null,
-      error: { message: 'User already exists' },
+  it('calls authApi.signup() with username and password on valid submit', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    // Supabase SDK shape: { data, error }
+    vi.mocked(authApi.signup).mockResolvedValueOnce({ data: {}, error: null });
+    renderForm();
+
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'newuser');
+    await user.type(screen.getByLabelText(/^password/i), 'Password1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /register/i }));
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(authApi.signup).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: 'newuser',
+          password: 'Password1',
+        })
+      );
     });
+  });
 
-    render(
-      <MemoryRouter>
-        <SignupForm />
-      </MemoryRouter>
-    );
+  it('shows error message when authApi.signup() returns an error', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    vi.mocked(authApi.signup).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'User already registered' },
+    });
+    renderForm();
 
-    await user.type(screen.getByLabelText(/Username/i), 'existing_user');
-    await user.type(screen.getByLabelText(/^Password/i), 'Pass123!');
-    await user.type(screen.getByLabelText(/Confirm Password/i), 'Pass123!');
-    await user.click(screen.getByRole('button', { name: /Register/i }));
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'existing');
+    await user.type(screen.getByLabelText(/^password/i), 'Password1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /register/i }));
 
-    expect(await screen.findByText(/User already exists/i)).toBeInTheDocument();
+    // --- Assert ---
+    await waitFor(() => {
+      expect(
+        screen.getByText(/user already registered/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('disables the submit button while submitting', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    // Never resolves — keeps isSubmitting true
+    vi.mocked(authApi.signup).mockImplementation(() => new Promise(() => {}));
+    renderForm();
+
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'newuser');
+    await user.type(screen.getByLabelText(/^password/i), 'Password1');
+    await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /register/i }));
+
+    // --- Assert ---
+    expect(
+      screen.getByRole('button', { name: /registering/i })
+    ).toBeDisabled();
   });
 });

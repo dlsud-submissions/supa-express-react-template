@@ -30,7 +30,8 @@ cd server && npm test
 
 - `@testing-library/jest-dom` matchers
 - Lucide icon mocks (renders `<div data-testid="icon-<Name>" />` instead of SVG)
-- `localStorage`, `fetch`, and `window.location` stubs
+- A global Supabase client mock (see below)
+- `localStorage` and `window.location` stubs
 - A global `react-router` mock that stubs `useNavigate`, `useRouteError`, and `Navigate`
 
 ### Custom Render
@@ -43,9 +44,46 @@ import { render, screen } from '../../../modules/utils/testing/testing.utils';
 
 `customRender` wraps the component in `MemoryRouter + ThemeProvider + ToastProvider + AuthProvider`, so routing hooks and context hooks work without manual setup.
 
+### Supabase Mock Pattern
+
+`vitest.setup.jsx` registers a global mock for `client/src/lib/supabase.js`
+that stubs both `supabase.auth.*` and the `supabase.from()` query chain.
+This means no test file needs to set up its own Supabase mock from scratch.
+
+**Auth stubs** — available on every `supabase.auth.*` call:
+
+```jsx
+import { supabase } from '../../../lib/supabase.js';
+
+// Override a specific method for one test
+vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+  data: { session: { user: { id: 'uuid-1' } } },
+  error: null,
+});
+```
+
+**Query chain stubs** — available via `supabase.from()`:
+
+```jsx
+import { supabase } from '../../../lib/supabase.js';
+
+// The chain is accessible via supabase._queryChain
+supabase._queryChain.single.mockResolvedValueOnce({
+  data: { id: 'uuid-1', username: 'alice', role: 'USER' },
+  error: null,
+});
+```
+
+Every chain method (`select`, `eq`, `ilike`, `gte`, `lte`, `order`,
+`single`, etc.) returns the chain by default so calls can be composed.
+`afterEach` in the setup file calls `vi.clearAllMocks()` automatically,
+so you never need to reset the stubs manually between tests.
+
 ### Auth Mock Pattern
 
-`customRender` wraps the real `AuthProvider`, which fires an async `checkAuthStatus` on mount. This causes `act()` warnings. Always add this mock to any test file that renders a component using `useAuth`:
+`customRender` wraps the real `AuthProvider`, which fires an async
+`onAuthStateChange` subscription on mount. Always add this mock to any
+test file that renders a component using `useAuth`:
 
 ```jsx
 vi.mock(
@@ -63,7 +101,8 @@ vi.mock(
 
 ### API Mock Pattern
 
-Mock the API module — never mock raw `fetch` when a component uses a wrapper:
+Mock the API module directly — never mock `supabase` from inside a
+component test when the component already goes through an api module:
 
 ```jsx
 vi.mock('../../modules/api/admin/admin.api', () => ({
@@ -72,6 +111,18 @@ vi.mock('../../modules/api/admin/admin.api', () => ({
     demoteUser: vi.fn(),
   },
 }));
+```
+
+For api module unit tests themselves, mock `supabase` directly:
+
+```jsx
+import { supabase } from '../../../lib/supabase.js';
+
+// supabase is already mocked globally — just override what you need
+vi.mocked(supabase.auth.signUp).mockResolvedValueOnce({
+  data: {},
+  error: null,
+});
 ```
 
 ### Mocking `useNavigate`
@@ -85,8 +136,6 @@ vi.mock('react-router', async (importOriginal) => {
   return { ...actual, useNavigate: () => mockNavigate };
 });
 ```
-
-> Never use `vi.spyOn(require('react-router'), 'useNavigate')` — this breaks with ESM.
 
 ### Async Components
 
@@ -118,61 +167,28 @@ Components that use `createPortal` (e.g. `ConfirmationModal`, `UserRowActions` d
 
 ## Server Tests (Vitest + Supertest)
 
+The server only has middleware tests.
+
 ### Setup
 
-`server/vitest.setup.js` provides two globals available in all test files:
+`server/vitest.setup.js` provides one global available in all test files:
 
 ```js
 // Chainable Express mock
 const { req, res, next } = mockExpressContext();
-
-// Prisma user model mock
-vi.mock('../lib/prisma.js', () => ({
-  prisma: { user: mockPrismaUser() },
-}));
 ```
 
-### Query Unit Tests
+The `mockPrismaUser` global was removed along with the Prisma layer.
 
-Mock Prisma at the module level and assert on method call arguments:
+### Middleware Tests
 
-```js
-vi.mock('../../../lib/prisma.js', () => ({
-  prisma: { user: mockPrismaUser() },
-}));
+The two remaining test files test the middleware layer directly:
 
-it('filters by role', async () => {
-  prisma.user.findMany.mockResolvedValue([]);
-  await searchUsers({ role: 'ADMIN' });
-  expect(prisma.user.findMany).toHaveBeenCalledWith(
-    expect.objectContaining({
-      where: expect.objectContaining({ role: 'ADMIN' }),
-    })
-  );
-});
-```
-
-### Integration Tests
-
-Integration tests build a fresh Express app in `beforeEach`, mount just the router under test, and use a mocked auth middleware that bypasses real JWT validation:
-
-```js
-vi.mock('../../middleware/auth/auth.middleware.js', () => ({
-  isAuthenticated: vi.fn((req, res, next) => {
-    req.user = { id: 1, username: 'admin', role: 'ADMIN' };
-    next();
-  }),
-}));
-
-beforeEach(() => {
-  app = express();
-  app.use(express.json());
-  app.use('/search', searchRouter);
-  app.use((err, req, res, next) => {
-    res.status(err.statusCode || 500).json({ message: err.message });
-  });
-});
-```
+- `server/src/middleware/app/app.middleware.test.js` — verifies CORS
+  and body parsing middleware are registered; verifies the 4-argument
+  error handler is mounted
+- `server/src/middleware/error/error.middleware.test.js` — verifies
+  error shape, status code passthrough, and validation error arrays
 
 ---
 
@@ -189,21 +205,19 @@ beforeEach(() => {
 | Navigation calls (`mockNavigate`)                       | ✅      |
 | Internal implementation details                         | ✗       |
 
-### Server query functions
+### Client api modules
+
+| Scenario                                      | Test it |
+| --------------------------------------------- | ------- |
+| Supabase SDK called with correct arguments    | ✅      |
+| Query chain filters applied correctly         | ✅      |
+| Sort column whitelisting (invalid → fallback) | ✅      |
+| Error shape returned correctly                | ✅      |
+
+### Server middleware
 
 | Scenario                                     | Test it |
 | -------------------------------------------- | ------- |
-| Prisma called with correct `where` clause    | ✅      |
-| Sort field whitelisting (invalid → fallback) | ✅      |
-| Date range boundaries (`gte`/`lte`)          | ✅      |
-| Return value passed through correctly        | ✅      |
-
-### Server integration
-
-| Scenario                                    | Test it |
-| ------------------------------------------- | ------- |
-| Correct HTTP status for valid request       | ✅      |
-| Correct response shape                      | ✅      |
-| 400 for invalid input                       | ✅      |
-| 500 when query layer throws                 | ✅      |
-| Auth middleware applied (401 without token) | ✅      |
+| Middleware stack registered                  | ✅      |
+| Error handler returns correct HTTP status    | ✅      |
+| Validation error arrays included in response | ✅      |

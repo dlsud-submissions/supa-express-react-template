@@ -24,16 +24,3 @@ global.mockExpressContext = () => {
 
   return { req, res, next };
 };
-
-/**
- * Reusable Prisma user model mock factory.
- * - Covers the full set of user methods used across query test files.
- * - Pass into vi.mock as: vi.mock('../lib/prisma.js', () => ({ prisma: { user: mockPrismaUser() } }))
- * @returns {Object} Vitest fn stubs for all Prisma user methods.
- */
-global.mockPrismaUser = () => ({
-  findMany: vi.fn(),
-  findUnique: vi.fn(),
-  create: vi.fn(),
-  update: vi.fn(),
-});

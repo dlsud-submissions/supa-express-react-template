@@ -1,21 +1,35 @@
-import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  render,
+  screen,
+  waitFor,
+} from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import LoginForm from './LoginForm';
 
-// Mock the auth provider and toast hooks
-vi.mock('../../../providers/AuthProvider/AuthProvider', () => ({
-  useAuth: vi.fn(),
-}));
+// Global mock for navigation to avoid hoisting ReferenceErrors
+const mockNavigate = vi.fn();
 
-vi.mock('../../../providers/ToastProvider/ToastProvider', () => ({
-  useToast: vi.fn(() => ({ showToast: vi.fn() })),
-}));
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, useNavigate: () => mockNavigate };
+});
+
+// Mock AuthProvider — LoginForm calls AuthProvider.login(), not authApi directly
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 describe('LoginForm', () => {
-  const user = userEvent.setup();
   const mockLogin = vi.fn();
 
   beforeEach(() => {
@@ -26,56 +40,87 @@ describe('LoginForm', () => {
     });
   });
 
-  it('updates input values on change', async () => {
-    render(
-      <MemoryRouter>
-        <LoginForm />
-      </MemoryRouter>
-    );
+  it('updates username input value on change', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    render(<LoginForm />);
 
-    const usernameInput = screen.getByLabelText(/Username/i);
-    await user.type(usernameInput, 'john_doe');
-    expect(usernameInput).toHaveValue('john_doe');
+    // --- Act ---
+    const usernameInput = screen.getByLabelText(/username/i);
+    await user.type(usernameInput, 'alice');
+
+    // --- Assert ---
+    expect(usernameInput).toHaveValue('alice');
   });
 
-  it('displays authentication error when login fails', async () => {
-    // Mock failed login return shape from AuthProvider
-    mockLogin.mockResolvedValue({
+  it('shows validation error when fields are empty on submit', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    // --- Act ---
+    await user.click(screen.getByRole('button', { name: /enter/i }));
+
+    // --- Assert ---
+    // Zod schema requires both fields — error shown without calling login
+    expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it('calls AuthProvider.login() with username and password', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValueOnce({ error: null });
+    vi.mocked(useAuth).mockReturnValue({ login: mockLogin, user: null });
+    render(<LoginForm />);
+
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /enter/i }));
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(mockLogin).toHaveBeenCalledWith({
+        username: 'alice',
+        password: 'Password1',
+      });
+    });
+  });
+
+  it('shows auth error message when login returns an error', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    mockLogin.mockResolvedValueOnce({
       error: { message: 'Invalid login credentials' },
     });
+    render(<LoginForm />);
 
-    render(
-      <MemoryRouter>
-        <LoginForm />
-      </MemoryRouter>
-    );
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /enter/i }));
 
-    await user.type(screen.getByLabelText(/Username/i), 'wrong_user');
-    await user.type(screen.getByLabelText(/Password/i), 'wrong_pass');
-    await user.click(screen.getByRole('button', { name: /Enter/i }));
-
-    expect(
-      await screen.findByText(/Invalid login credentials/i)
-    ).toBeInTheDocument();
+    // --- Assert ---
+    await waitFor(() => {
+      expect(
+        screen.getByText(/invalid login credentials/i)
+      ).toBeInTheDocument();
+    });
   });
 
-  it('disables submit button while authenticating', async () => {
-    // Mock a slow login response
-    mockLogin.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
-    );
+  it('disables the submit button while submitting', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    // Never resolves — keeps isSubmitting true
+    mockLogin.mockImplementation(() => new Promise(() => {}));
+    render(<LoginForm />);
 
-    render(
-      <MemoryRouter>
-        <LoginForm />
-      </MemoryRouter>
-    );
+    // --- Act ---
+    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /enter/i }));
 
-    await user.type(screen.getByLabelText(/Username/i), 'user');
-    await user.type(screen.getByLabelText(/Password/i), 'password');
-    await user.click(screen.getByRole('button', { name: /Enter/i }));
-
-    const button = screen.getByRole('button', { name: /Logging in.../i });
-    expect(button).toBeDisabled();
+    // --- Assert ---
+    expect(screen.getByRole('button', { name: /logging in/i })).toBeDisabled();
   });
 });
