@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![The Odin Project](https://img.shields.io/badge/The%20Odin%20Project-NodeJS-red)](https://www.theodinproject.com/paths/full-stack-javascript/courses/nodejs)
 
-> A full-stack application built with React and Express as part of The Odin Project's NodeJS curriculum. Features JWT authentication, role-based access control, PostgreSQL via Prisma ORM, and a modular search system.
+> A full-stack application built with React and Express as part of The Odin Project's NodeJS curriculum. Features Supabase Auth, role-based access control enforced by Row Level Security, a Supabase-backed CRUD layer, and a modular search system.
 
 ## 📋 Table of Contents
 
@@ -20,10 +20,10 @@
 
 ## ✨ Features
 
-- JWT authentication with HttpOnly cookies
-- Role-based access control (USER / ADMIN / SUPER_ADMIN)
+- Supabase Auth (email/password) with session persistence in localStorage
+- Role-based access control (USER / ADMIN / SUPER_ADMIN) enforced by Postgres RLS
 - Full-stack search with filters, sorting, and URL-state persistence
-- Prisma ORM with PostgreSQL
+- Direct Supabase CRUD from the client — no Express controllers for data
 - Vitest + React Testing Library test suite (client & server)
 - Dark/light theme toggle
 - Responsive layout with mobile Navbar
@@ -48,23 +48,26 @@ template-react-expressjs/
 │       ├── components/   # UI components grouped by domain
 │       ├── config/       # searchConfig.js — drives all search UI
 │       ├── layouts/      # MainLayout (Navbar + Outlet)
-│       ├── modules/api/  # Fetch wrappers per domain
+│       ├── lib/          # supabase.js — Supabase client singleton
+│       ├── modules/api/  # Supabase query wrappers per domain
 │       ├── pages/        # Route-level components
 │       ├── providers/    # Auth, Theme, Toast context
 │       ├── routes/       # AuthRoute, AdminRoute guards
 │       ├── routes.jsx    # createBrowserRouter config
 │       └── styles/       # Global CSS variables, reset, animations
-├── server/               # Express backend
+├── server/               # Express backend (health check only)
 │   └── src/
-│       ├── config/       # Passport, CORS, cookie options
-│       ├── controllers/  # Route handlers
-│       ├── db/queries/   # Prisma query functions per domain
-│       ├── middleware/   # Auth, error, app middleware
-│       └── routes/       # Express routers
+│       ├── config/       # CORS options
+│       ├── lib/          # supabaseAdmin.js — service role client
+│       ├── middleware/   # CORS, body parser, error handler
+│       └── routes/       # /api/health
+├── supabase/
+│   └── migrations/       # SQL migration files
+│       └── 01_users_table.sql
 ├── docs/
-│   ├── setup.md          # Environment setup (PostgreSQL, .env, pgAdmin)
-│   ├── architecture.md   # Stack overview, request flow, patterns
-│   └── testing.md        # Testing conventions and patterns
+│   ├── setup.md          # Supabase project setup, .env config, seeding
+│   ├── architecture.md   # Stack overview, request flow, auth flow, schema
+│   └── testing.md        # Testing conventions, Supabase mock patterns
 ├── CONTRIBUTING.md       # Branching, commit conventions, PR process
 ├── CHANGELOG.md          # Version history
 └── package.json          # Root orchestration scripts
@@ -72,13 +75,13 @@ template-react-expressjs/
 
 ## 📖 Documentation
 
-| Doc                                          | Description                                                             |
-| -------------------------------------------- | ----------------------------------------------------------------------- |
-| [docs/setup.md](docs/setup.md)               | PostgreSQL installation (Windows/macOS/Linux), `.env` config, pgAdmin 4 |
-| [docs/architecture.md](docs/architecture.md) | Stack overview, request flow, client/server structure, auth flow        |
-| [docs/testing.md](docs/testing.md)           | Testing patterns, mocking conventions, what to test                     |
-| [CONTRIBUTING.md](CONTRIBUTING.md)           | Branching strategy, commit conventions, PR process                      |
-| [CHANGELOG.md](CHANGELOG.md)                 | Version history                                                         |
+| Doc                                          | Description                                                                 |
+| -------------------------------------------- | --------------------------------------------------------------------------- |
+| [docs/setup.md](docs/setup.md)               | Supabase project setup, API key config, `.env` files, seeding test accounts |
+| [docs/architecture.md](docs/architecture.md) | Stack overview, request flow, client/server structure, auth flow, DB schema |
+| [docs/testing.md](docs/testing.md)           | Testing patterns, Supabase mock conventions, what to test                   |
+| [CONTRIBUTING.md](CONTRIBUTING.md)           | Branching strategy, commit conventions, PR process                          |
+| [CHANGELOG.md](CHANGELOG.md)                 | Version history                                                             |
 
 ## 🧪 Testing
 
@@ -87,7 +90,8 @@ cd client && npm run test:watch   # client — watch mode
 cd server && npm run test:watch   # server — watch mode
 ```
 
-See [docs/testing.md](docs/testing.md) for patterns, mocking conventions, and gotchas.
+See [docs/testing.md](docs/testing.md) for Supabase mock patterns, auth
+state simulation, and API module testing conventions.
 
 ## 💡 Future Improvements
 
@@ -95,13 +99,16 @@ See [docs/testing.md](docs/testing.md) for patterns, mocking conventions, and go
 - [ ] Pagination on search results
 - [ ] Email verification on signup
 - [ ] File upload support (profile avatars)
-- [ ] Rate limiting on auth endpoints
+- [ ] OAuth providers (Google, GitHub) via Supabase Auth
+- [ ] Rate limiting on the Express health endpoint
 
 ## 🛠️ Technologies Used
 
-**Client:** React 19, React Router 7, Vite, CSS Modules, Lucide React, Vitest, React Testing Library
+**Client:** React 19, React Router 7, Vite, CSS Modules, Lucide React, Supabase JS, Vitest, React Testing Library
 
-**Server:** Node.js, Express, Prisma ORM, PostgreSQL, Passport.js (Local + JWT), bcryptjs, express-validator
+**Server:** Node.js, Express (health check only)
+
+**Database & Auth:** Supabase (PostgreSQL + Auth + RLS), Zod (client-side validation)
 
 **Tooling:** ESLint, Prettier, concurrently, nodemon
 

@@ -14,6 +14,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "=== DATABASE ===": "",
+    "db:seed": "node src/db/seed.js",
     "=== CODE QUALITY ===": "",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

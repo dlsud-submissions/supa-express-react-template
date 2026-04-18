@@ -6,36 +6,42 @@ A high-level overview of how the client and server are structured and how they c
 
 ## Stack
 
-| Layer    | Technology                                  |
-| -------- | ------------------------------------------- |
-| Frontend | React 19, React Router 7, CSS Modules, Vite |
-| Backend  | Node.js, Express 4                          |
-| Database | PostgreSQL via Prisma ORM                   |
-| Auth     | Passport.js (Local + JWT), HttpOnly cookies |
-| Testing  | Vitest, React Testing Library, Supertest    |
+| Layer    | Technology                                                        |
+| -------- | ----------------------------------------------------------------- |
+| Frontend | React 19, React Router 7, CSS Modules, Vite                       |
+| Backend  | Node.js, Express 4 (health check only)                            |
+| Database | PostgreSQL via Supabase (managed)                                 |
+| Auth     | Supabase Auth (email/password), session persisted in localStorage |
+| Testing  | Vitest, React Testing Library, Supertest                          |
 
 ---
 
 ## Request Flow
+
+Most data flows directly from the React client to Supabase. The Express
+server exists only to provide a `/api/health` endpoint and a mounting
+point for future server-side concerns.
 
 ```
 Browser
   │
   ├── React Router  →  Page Component
   │                        │
-  │                    API module (fetch wrapper)
+  │                    API module (supabase.from / supabase.auth)
   │                        │
-  └── ──────────────── HTTP request ──────────────────►  Express
+  └── ──────────────── Supabase SDK ──────────────────►  Supabase Cloud
                                                               │
-                                                        auth.middleware
-                                                        (Passport JWT)
+                                                         RLS policies
+                                                         (enforced by Postgres)
                                                               │
-                                                         Controller
-                                                              │
-                                                        DB Query fn
-                                                        (Prisma ORM)
-                                                              │
-                                                         PostgreSQL
+                                                         public.users table
+                                                         auth.users table
+```
+
+Health check (server only):
+
+```
+Browser ──── GET /api/health ────► Express ──── { status: 'ok' }
 ```
 
 ---
@@ -54,8 +60,14 @@ client/src/
 │   └── searchConfig.js  # Single source of truth for all search sections
 ├── layouts/
 │   └── MainLayout/      # Persistent Navbar + Outlet wrapper
+├── lib/
+│   └── supabase.js      # Supabase client singleton (anon key)
 ├── modules/
-│   └── api/             # Fetch wrappers grouped by domain (auth, user, admin, search)
+│   └── api/             # Supabase query wrappers grouped by domain
+│       ├── auth/        # authApi — supabase.auth.* wrappers
+│       ├── user/        # userApi — public.users SELECT
+│       ├── admin/       # adminApi — public.users SELECT + UPDATE
+│       └── search/      # searchApi — filtered public.users SELECT
 ├── pages/               # Route-level components
 ├── providers/           # AuthProvider, ThemeProvider, ToastProvider
 ├── routes/              # AuthRoute, AdminRoute guards
@@ -65,11 +77,28 @@ client/src/
 
 ### Key Patterns
 
-**URL-state for search** — All search state (section, q, sort, filters) lives in the URL via `useSearchParams`. This makes searches bookmarkable and shareable, and means no extra state management library is needed.
+**Supabase client singleton** — `client/src/lib/supabase.js` exports a
+single `createClient` instance initialised with the anon key. All api
+modules and AuthProvider import from this file. This prevents duplicate
+GoTrue sessions.
 
-**API modules** — `modules/api/` contains one file per backend domain (`auth.api.js`, `admin.api.js`, etc.). Components never call `fetch` directly — they import from these modules. This keeps components testable (mock the module, not fetch).
+**URL-state for search** — All search state (section, q, sort, filters)
+lives in the URL via `useSearchParams`. This makes searches bookmarkable
+and shareable, and means no extra state management library is needed.
 
-**Config-driven search** — `searchConfig.js` drives every search UI component. Adding a new searchable section (e.g. posts) requires only a new entry in this file plus a row renderer in `SearchPage`.
+**API modules** — `modules/api/` contains one file per backend domain
+(`auth.api.js`, `admin.api.js`, etc.). Components never import `supabase`
+directly — they go through these modules. This keeps components testable
+(mock the module, not the SDK).
+
+**Config-driven search** — `searchConfig.js` drives every search UI
+component. Adding a new searchable section (e.g. posts) requires only a
+new entry in this file plus a row renderer in `SearchPage`.
+
+**{ data, error } return shape** — All api modules return Supabase's
+native `{ data, error }` tuple. Callers (pages, components) check
+`error` before using `data`, keeping error handling consistent and
+explicit throughout the app.
 
 ---
 
@@ -77,47 +106,54 @@ client/src/
 
 ```
 server/src/
-├── config/              # Passport strategy setup, cookie options, CORS
-├── controllers/         # Route handler functions — one file per domain
-├── db/
-│   ├── queries/         # Prisma query functions — one folder per domain
-│   └── pool.js          # pg connection pool (used by Prisma adapter)
-├── errors/              # Custom AppError / ServerError classes
+├── config/              # CORS options
+├── lib/
+│   └── supabaseAdmin.js # Supabase admin client (service role key)
 ├── middleware/
-│   ├── app/             # Global middleware stack (CORS, cookies, body parser)
-│   ├── auth/            # isAuthenticated (Passport JWT), isAdmin
+│   ├── app/             # Global middleware stack (CORS, body parser)
 │   └── error/           # Global error handler
-├── routes/              # Express routers — one file per domain
-│   └── index.routes.js  # Mounts all routers under /api/*
+├── routes/
+│   └── index.routes.js  # /api/health only
 └── app.js               # Express app setup and server start
 ```
 
-### Key Patterns
+The server no longer handles authentication, user management, or search.
+All CRUD is done client-side via the Supabase SDK with RLS enforcing
+access control at the database level.
 
-**Controller → Query separation** — Controllers handle HTTP concerns (req, res, next, status codes). All database access is in `db/queries/`. Controllers never import Prisma directly.
-
-**Whitelist-based sorting** — Query functions validate `sortBy` against an explicit array of allowed field names before passing to Prisma. This prevents SQL injection via sort parameters.
-
-**Layered error handling** — Custom error classes (`ValidationError`, `NotFoundError`, etc.) carry a `statusCode`. The global error middleware in `error/` reads this to send the right HTTP response without scattered `res.status()` calls.
+The `supabaseAdmin` client (service role key) is available in
+`server/src/lib/supabaseAdmin.js` for any future server-side operations
+that need to bypass RLS (e.g. the seed script).
 
 ---
 
 ## Auth Flow
 
 ```
-1. POST /api/auth/login
-   → Passport Local Strategy validates username + password
-   → JWT signed with HS256, embedded in HttpOnly cookie
+1. Signup — POST via Supabase Auth SDK
+   → supabase.auth.signUp({ email: username@app.local, password, data: { username } })
+   → Supabase creates auth.users row
+   → handle_new_user DB trigger fires → inserts public.users row
 
-2. Subsequent requests
-   → Passport JWT Strategy extracts token from cookie or Authorization header
-   → Decodes payload, fetches user from DB, attaches to req.user
+2. Login — POST via Supabase Auth SDK
+   → supabase.auth.signInWithPassword({ email: username@app.local, password })
+   → Supabase returns session (JWT + refresh token)
+   → Session persisted in localStorage
 
-3. GET /api/auth/me
-   → Reads req.user directly (no DB call — user already on request)
+3. Session rehydration on page load
+   → AuthProvider calls supabase.auth.getSession() on mount
+   → If session exists: fetches public.users row for username + role
+   → AuthProvider subscribes to onAuthStateChange for real-time sync
 
-4. Logout
-   → Clears the cookie, client redirects to /log-in
+4. Subsequent requests
+   → supabase.from('users').select(...)
+   → SDK automatically attaches the session JWT as Authorization header
+   → RLS policies on public.users enforce read/write access
+
+5. Logout
+   → supabase.auth.signOut()
+   → onAuthStateChange fires SIGNED_OUT → AuthProvider clears user state
+   → Session removed from localStorage
 ```
 
 ---
@@ -125,12 +161,36 @@ server/src/
 ## Role Hierarchy
 
 ```
-SUPER_ADMIN  →  can promote/demote ADMIN ↔ USER
-ADMIN        →  can access admin dashboard and user management
-USER         →  standard authenticated access
+SUPER_ADMIN  →  can promote/demote ADMIN ↔ USER (RLS UPDATE policy)
+ADMIN        →  can read all public.users rows (RLS SELECT policy)
+USER         →  can read only their own public.users row (RLS SELECT policy)
 ```
 
 Route guards are applied at two levels:
 
-- **Server**: `isAuthenticated` and `isAdmin` middleware on routes
-- **Client**: `<AuthRoute>` and `<AdminRoute>` components in the router config
+- **Database**: RLS policies on `public.users` enforce access at the data layer
+- **Client**: `<AuthRoute>` and `<AdminRoute>` components in the router config protect routes in the UI
+
+---
+
+## Database Schema
+
+```sql
+-- Role enum
+CREATE TYPE app_role AS ENUM ('USER', 'ADMIN', 'SUPER_ADMIN');
+
+-- Profile table (mirrors auth.users via trigger)
+CREATE TABLE public.users (
+  id          UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  username    VARCHAR(20) UNIQUE NOT NULL,
+  role        app_role NOT NULL DEFAULT 'USER',
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  last_login  TIMESTAMPTZ
+);
+
+-- Triggers
+-- handle_new_user()   → runs AFTER INSERT on auth.users
+-- handle_user_login() → runs AFTER UPDATE of last_sign_in_at on auth.users
+```
+
+Full migration SQL: `supabase/migrations/01_users_table.sql`
