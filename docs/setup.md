@@ -98,15 +98,22 @@ run the seed script after your schema is applied:
 
 ```bash
 cd server
-node src/db/seed.js
+npm run db:seed
 ```
 
-This uses the Supabase Admin API to create auth users and public.users
-rows via the existing DB trigger. All accounts use the password
-`testpass123`.
+This uses the Supabase Admin API to create auth users and insert
+`public.users` rows via the `handle_new_user` DB trigger. Roles that
+differ from the default `USER` are patched in a follow-up `UPDATE`.
 
-See [Issue #17](https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues/17)
-for the full seed implementation.
+| Username | Role        | Password      |
+| -------- | ----------- | ------------- |
+| Bryan    | USER        | `testpass123` |
+| Odin     | ADMIN       | `testpass123` |
+| Damon    | USER        | `testpass123` |
+| Boss     | SUPER_ADMIN | `testpass123` |
+
+Running the script a second time is safe — existing users are detected
+and skipped rather than duplicated.
 
 ---
 
@@ -136,6 +143,8 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                 |
 | `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                               |
-| Login returns "Invalid login credentials"                      | The user may not exist yet — run the seed script or sign up manually                                               |
+| Login returns "Invalid login credentials"                      | The user may not exist yet — run the seed script or sign up manually via the `/sign-up` page                       |
 | User row missing after signup                                  | Check that the `handle_new_user` trigger is applied — re-run the migration SQL if needed                           |
+| Seeded user cannot log in                                      | Confirm `email_confirm: true` was set during seed — check the user in Supabase Dashboard → Authentication → Users  |
 | CORS error in browser                                          | Ensure `CORS_ALLOWED_ORIGINS` in `server/.env` matches your Vite dev server URL (default: `http://localhost:5173`) |
+| Role not updating after promote/demote                         | Verify your `SUPER_ADMIN` RLS policy allows `UPDATE` on the `role` column for that role                            |
