@@ -1,10 +1,20 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import TableContainer from './TableContainer';
 
-// AuthProvider is handled by customRender via testing.utils.
-// The global Supabase mock in vitest.setup.jsx provides a safe default
-// getSession() stub, so no additional mock is needed here.
+// Stub AuthProvider to prevent the real provider's async useEffect
+// (getSession → setState) from firing during render, which would cause act() warnings.
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(() => ({ user: null, loading: false })),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 /**
  * Unit tests for the TableContainer component.
