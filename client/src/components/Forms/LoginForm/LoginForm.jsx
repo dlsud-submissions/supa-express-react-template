@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { supabase } from '../../../lib/supabase.js';
 import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
@@ -11,12 +12,14 @@ import styles from './LoginForm.module.css';
  * Login form component for user authentication.
  * - Delegates auth to AuthProvider.login() which calls Supabase directly.
  * - AuthProvider.onAuthStateChange handles setting user state after success.
- * - Redirects based on user role after the provider updates user state.
+ * - Reads role directly from public.users after login to determine redirect,
+ *   because the AuthProvider context updates asynchronously and user would
+ *   still be null at the point navigate() is called.
  * @returns {JSX.Element} The rendered login form.
  */
 const LoginForm = () => {
   const { showToast } = useToast();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -73,9 +76,25 @@ const LoginForm = () => {
 
       showToast('Successfully logged in', 'success');
 
-      // user state is set by AuthProvider via onAuthStateChange
-      // Navigate based on role — re-read from the updated context
-      const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
+      // AuthProvider sets user state asynchronously via onAuthStateChange, so
+      // reading `user` from context here would return the pre-login (null) value.
+      // Instead, fetch the profile directly from public.users using the fresh
+      // session to determine the correct redirect destination.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      let role = 'USER';
+      if (session?.user?.id) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', session.user.id)
+          .single();
+        if (profile?.role) role = profile.role;
+      }
+
+      const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
       navigate(isAdmin ? '/admin-dashboard' : '/dashboard');
     } catch (err) {
       setErrorData({
