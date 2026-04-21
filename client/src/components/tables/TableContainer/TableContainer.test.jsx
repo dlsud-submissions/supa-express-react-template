@@ -1,19 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import TableContainer from './TableContainer';
 
-// Mock AuthProvider to prevent background auth checks
-vi.mock(
-  '../../../../providers/AuthProvider/AuthProvider',
-  async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      useAuth: vi.fn(),
-      AuthProvider: ({ children }) => children,
-    };
-  }
-);
+// AuthProvider is handled by customRender via testing.utils.
+// The global Supabase mock in vitest.setup.jsx provides a safe default
+// getSession() stub, so no additional mock is needed here.
 
 /**
  * Unit tests for the TableContainer component.
@@ -25,8 +16,6 @@ describe('TableContainer Component', () => {
   const columns = ['User', 'Role', 'Joined', 'Actions'];
 
   it('renders the empty state when data is empty', () => {
-    // --- Arrange ---
-    // --- Act ---
     render(
       <TableContainer
         data={[]}
@@ -36,13 +25,10 @@ describe('TableContainer Component', () => {
       />
     );
 
-    // --- Assert ---
     expect(screen.getByText(/no users found/i)).toBeInTheDocument();
   });
 
   it('renders a custom empty message', () => {
-    // --- Arrange ---
-    // --- Act ---
     render(
       <TableContainer
         data={[]}
@@ -52,15 +38,12 @@ describe('TableContainer Component', () => {
       />
     );
 
-    // --- Assert ---
     expect(screen.getByText(/no transactions available/i)).toBeInTheDocument();
   });
 
   it('renders column headers', () => {
-    // --- Arrange ---
     const mockData = [{ id: '1', name: 'alice' }];
 
-    // --- Act ---
     render(
       <TableContainer
         data={mockData}
@@ -73,20 +56,17 @@ describe('TableContainer Component', () => {
       />
     );
 
-    // --- Assert ---
     columns.forEach((col) => {
       expect(screen.getByText(col)).toBeInTheDocument();
     });
   });
 
   it('calls renderRow for each data item', () => {
-    // --- Arrange ---
     const mockData = [
       { id: '1', name: 'alice' },
       { id: '2', name: 'bob' },
     ];
 
-    // --- Act ---
     render(
       <TableContainer
         data={mockData}
@@ -99,7 +79,6 @@ describe('TableContainer Component', () => {
       />
     );
 
-    // --- Assert ---
     expect(screen.getAllByTestId('mock-row')).toHaveLength(2);
     expect(screen.getByText('alice')).toBeInTheDocument();
     expect(screen.getByText('bob')).toBeInTheDocument();
