@@ -24,8 +24,10 @@ vi.mock('lucide-react', async () => {
 // ---------------------------------------------------------------------------
 // Provides a chainable stub for supabase.from() queries and stubs for all
 // supabase.auth.* methods used across the test suite.
-// Individual test files can override specific methods with:
-//   vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce(...)
+//
+// IMPORTANT: getSession MUST always return a Promise because AuthProvider
+// calls supabase.auth.getSession().then(...). We restore the default
+// resolved value after each vi.clearAllMocks() call.
 // ---------------------------------------------------------------------------
 vi.mock('./src/lib/supabase.js', () => {
   const queryChain = {
@@ -54,7 +56,8 @@ vi.mock('./src/lib/supabase.js', () => {
         signUp: vi.fn(),
         signInWithPassword: vi.fn(),
         signOut: vi.fn(),
-        getSession: vi.fn(),
+        // Must return a resolved Promise — AuthProvider calls .getSession().then(...)
+        getSession: vi.fn().mockResolvedValue({ data: { session: null } }),
         onAuthStateChange: vi.fn(() => ({
           data: { subscription: { unsubscribe: vi.fn() } },
         })),
@@ -64,6 +67,24 @@ vi.mock('./src/lib/supabase.js', () => {
     },
   };
 });
+
+// After each test, vi.clearAllMocks() wipes mock implementations (including
+// the mockResolvedValue on getSession). Restore safe defaults so any
+// AuthProvider that mounts in the next test never receives undefined.then().
+// We use a dynamic import inside a separate afterEach registered after the
+// mock factory has run.
+const restoreSupabaseDefaults = async () => {
+  const { supabase } = await import('./src/lib/supabase.js');
+  supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+  supabase.auth.onAuthStateChange.mockReturnValue({
+    data: { subscription: { unsubscribe: vi.fn() } },
+  });
+  const chain = supabase._queryChain;
+  Object.keys(chain).forEach((key) => chain[key].mockReturnValue(chain));
+  supabase.from.mockReturnValue(chain);
+};
+
+afterEach(restoreSupabaseDefaults);
 
 // Initialize Browser API Mocks
 if (typeof window !== 'undefined') {
