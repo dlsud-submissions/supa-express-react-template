@@ -27,8 +27,12 @@
 The `public.users` table, `app_role` enum, RLS policies, and auth
 triggers all need to be created before the app can run.
 
-The migration SQL is saved in the repo at
-`supabase/migrations/01_users_table.sql`.
+Apply the migrations **in order** — each file builds on the previous one.
+
+### Migration 01 — Base schema
+
+The base schema creates `public.users`, the `app_role` enum, RLS
+policies, and the initial `handle_new_user` trigger.
 
 **Option A — Supabase Dashboard SQL Editor (easiest)**
 
@@ -44,6 +48,30 @@ supabase login
 supabase link --project-ref <your-project-ref>
 supabase db push
 ```
+
+### Migration 02 — OAuth user trigger
+
+This migration upgrades the `handle_new_user` trigger to support Google
+OAuth users and adds the `avatar_url` column to `public.users`. It must
+be applied **after** Migration 01.
+
+> **Required before enabling Google OAuth.** If you skip this step,
+> Google sign-ups will fail at the database level because the trigger
+> cannot find a `username` field in Google's OAuth metadata.
+
+**Option A — Supabase Dashboard SQL Editor**
+
+1. Go to **SQL Editor → New query**
+2. Paste the contents of `supabase/migrations/02_oauth_user_trigger.sql`
+3. Click **Run**
+
+**Option B — Supabase CLI**
+
+```bash
+supabase db push
+```
+
+The migration is idempotent — running it more than once is safe.
 
 ---
 
@@ -98,22 +126,15 @@ run the seed script after your schema is applied:
 
 ```bash
 cd server
-npm run db:seed
+node src/db/seed.js
 ```
 
-This uses the Supabase Admin API to create auth users and insert
-`public.users` rows via the `handle_new_user` DB trigger. Roles that
-differ from the default `USER` are patched in a follow-up `UPDATE`.
+This uses the Supabase Admin API to create auth users and public.users
+rows via the existing DB trigger. All accounts use the password
+`testpass123`.
 
-| Username | Role        | Password      |
-| -------- | ----------- | ------------- |
-| Bryan    | USER        | `testpass123` |
-| Odin     | ADMIN       | `testpass123` |
-| Damon    | USER        | `testpass123` |
-| Boss     | SUPER_ADMIN | `testpass123` |
-
-Running the script a second time is safe — existing users are detected
-and skipped rather than duplicated.
+See [Issue #17](https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues/17)
+for the full seed implementation.
 
 ---
 
@@ -143,8 +164,9 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                 |
 | `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                               |
-| Login returns "Invalid login credentials"                      | The user may not exist yet — run the seed script or sign up manually via the `/sign-up` page                       |
+| Login returns "Invalid login credentials"                      | The user may not exist yet — run the seed script or sign up manually                                               |
 | User row missing after signup                                  | Check that the `handle_new_user` trigger is applied — re-run the migration SQL if needed                           |
-| Seeded user cannot log in                                      | Confirm `email_confirm: true` was set during seed — check the user in Supabase Dashboard → Authentication → Users  |
+| Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor               |
+| Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                           |
+| `avatar_url` is missing for a Google user                      | The column was added in Migration 02 — re-run it; existing rows will be back-filled automatically                  |
 | CORS error in browser                                          | Ensure `CORS_ALLOWED_ORIGINS` in `server/.env` matches your Vite dev server URL (default: `http://localhost:5173`) |
-| Role not updating after promote/demote                         | Verify your `SUPER_ADMIN` RLS policy allows `UPDATE` on the `role` column for that role                            |
