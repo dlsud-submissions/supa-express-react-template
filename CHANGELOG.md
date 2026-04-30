@@ -11,7 +11,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- 
+- Google OAuth setup guide for Google Cloud Console and Supabase
+  provider configuration in `docs/setup.md`
 
 ### Fixed
 
