@@ -27,18 +27,19 @@
 The `public.users` table, `app_role` enum, RLS policies, and auth
 triggers all need to be created before the app can run.
 
-Apply the migrations **in order** — each file builds on the previous one.
+Use the root-level schema and seed files for the baseline setup, then
+apply versioned migrations for structural changes that came later.
 
-### Migration 01 — Base schema
+### Baseline schema — `supabase/schema.sql`
 
 The base schema creates `public.users`, the `app_role` enum, RLS
-policies, and the initial `handle_new_user` trigger.
+policies, and the auth triggers the app depends on.
 
 **Option A — Supabase Dashboard SQL Editor (easiest)**
 
 1. In your project dashboard go to **SQL Editor**
 2. Click **New query**
-3. Paste the contents of `supabase/migrations/01_users_table.sql`
+3. Paste the contents of `supabase/schema.sql`
 4. Click **Run**
 
 **Option B — Supabase CLI**
@@ -53,7 +54,7 @@ supabase db push
 
 This migration upgrades the `handle_new_user` trigger to support Google
 OAuth users and adds the `avatar_url` column to `public.users`. It must
-be applied **after** Migration 01.
+be applied **after** `supabase/schema.sql`.
 
 > **Required before enabling Google OAuth.** If you skip this step,
 > Google sign-ups will fail at the database level because the trigger
@@ -122,16 +123,30 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 ## 5. Seed the Database (Optional)
 
 To create the four default test accounts (Bryan, Odin, Damon, Boss),
-run the seed script after your schema is applied:
+run the seed SQL after your schema is applied:
+
+**Option A — Supabase Dashboard SQL Editor**
+
+1. Go to **SQL Editor → New query**
+2. Paste the contents of `supabase/seed.sql`
+3. Click **Run**
+
+**Option B — Keep using the Node seed helper**
 
 ```bash
 cd server
 node src/db/seed.js
 ```
 
-This uses the Supabase Admin API to create auth users and public.users
-rows via the existing DB trigger. All accounts use the password
-`testpass123`.
+Both approaches create the same four development users and keep the
+password as `testpass123` for each account:
+
+| Username | Role |
+| -------- | ---- |
+| `Bryan`  | `USER` |
+| `Odin`   | `ADMIN` |
+| `Damon`  | `USER` |
+| `Boss`   | `SUPER_ADMIN` |
 
 See [Issue #17](https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues/17)
 for the full seed implementation.
@@ -164,8 +179,8 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                 |
 | `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                               |
-| Login returns "Invalid login credentials"                      | The user may not exist yet — run the seed script or sign up manually                                               |
-| User row missing after signup                                  | Check that the `handle_new_user` trigger is applied — re-run the migration SQL if needed                           |
+| Login returns "Invalid login credentials"                      | The user may not exist yet — run `supabase/seed.sql`, use the Node seed helper, or sign up manually               |
+| User row missing after signup                                  | Check that `supabase/schema.sql` was applied and the auth triggers exist before running later migrations           |
 | Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor               |
 | Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                           |
 | `avatar_url` is missing for a Google user                      | The column was added in Migration 02 — re-run it; existing rows will be back-filled automatically                  |
