@@ -120,7 +120,65 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 
 ---
 
-## 5. Seed the Database (Optional)
+## 5. Configure Google OAuth
+
+Google OAuth is configured in Google Cloud and Supabase. The app does
+not need any extra OAuth-specific `.env` variables because the existing
+Supabase URL and anon key already support the client-side OAuth flow.
+
+### 5.1 Google Cloud Console
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/) and
+   create a new project, or select an existing one you want to use for
+   this app
+2. Open **APIs & Services -> Enabled APIs & services**
+3. Click **+ ENABLE APIS AND SERVICES**
+4. Search for and enable **People API**
+5. Go to **APIs & Services -> OAuth consent screen**
+6. Configure the consent screen for your project and add the test users
+   you want to use during development if Google requires it
+7. Go to **APIs & Services -> Credentials**
+8. Click **+ CREATE CREDENTIALS -> OAuth client ID**
+9. Choose **Web application** as the application type
+10. Add this Authorized redirect URI exactly:
+
+```text
+https://<your-project-ref>.supabase.co/auth/v1/callback
+```
+
+11. Save the credential and copy the **Client ID** and
+    **Client Secret**
+
+### 5.2 Supabase Dashboard
+
+1. In your Supabase project, open **Authentication -> Providers**
+2. Select **Google**
+3. Toggle **Enable sign in with Google**
+4. Paste the Google **Client ID** and **Client Secret**
+5. Set the **Site URL** to your frontend origin for development:
+
+```text
+http://localhost:5173
+```
+
+6. Add your deployed frontend URL to the allowed redirect/site URL
+   configuration before testing in production
+7. Save the provider settings
+
+### 5.3 Notes
+
+- No new `.env` variables are required for Google OAuth in this
+  template
+- Apply `supabase/migrations/02_oauth_user_trigger.sql` before testing
+  Google sign-up so the database trigger can create valid user rows for
+  OAuth users
+- The client already uses `detectSessionInUrl: true`, so Supabase will
+  exchange the OAuth code automatically when the user returns to
+  `/auth/callback`
+
+---
+
+## 6. Seed the Database (Optional)
 
 To create the four default test accounts (Bryan, Odin, Damon, Boss),
 run the seed SQL after your schema is applied:
@@ -153,7 +211,7 @@ for the full seed implementation.
 
 ---
 
-## 6. Install Dependencies
+## 7. Install Dependencies
 
 ```bash
 # From the project root
@@ -162,7 +220,7 @@ npm run install:all
 
 ---
 
-## 7. Start the App
+## 8. Start the App
 
 ```bash
 # From the project root
@@ -184,4 +242,6 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 | Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor               |
 | Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                           |
 | `avatar_url` is missing for a Google user                      | The column was added in Migration 02 — re-run it; existing rows will be back-filled automatically                  |
+| `redirect_uri_mismatch` from Google                            | Ensure the Google OAuth client has `https://<your-project-ref>.supabase.co/auth/v1/callback` as an authorized redirect URI |
+| `Unsupported provider: provider is not enabled`                | Open **Supabase Dashboard -> Authentication -> Providers -> Google** and confirm Google is enabled with valid credentials |
 | CORS error in browser                                          | Ensure `CORS_ALLOWED_ORIGINS` in `server/.env` matches your Vite dev server URL (default: `http://localhost:5173`) |
