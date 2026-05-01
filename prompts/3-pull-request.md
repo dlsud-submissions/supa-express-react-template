@@ -149,14 +149,6 @@ Closes #18
 Adds live cage availability checks at booking confirmation to prevent
 overbooking when all cages for a given size category are occupied.
 
-## Type of Change
-
-- [x] `feat` — new feature
-
-## Scope
-
-booking
-
 ## What Changed
 
 - `cageAvailability.ts` — new service that queries cage occupancy
