@@ -82,6 +82,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Starts the Google OAuth redirect flow through Supabase Auth.
+   * - Redirect returns to the dedicated public callback route.
+   * @returns {Promise<import('@supabase/supabase-js').OAuthResponse>}
+   */
+  const loginWithGoogle = async () => {
+    setAuthError(null);
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
+
+  /**
    * Signs out via authApi.logout.
    * - onAuthStateChange handles clearing user state after success.
    */
@@ -103,6 +118,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         authError,
         login,
+        loginWithGoogle,
         logout,
         clearAuthError,
       }}
@@ -114,7 +130,7 @@ export const AuthProvider = ({ children }) => {
 
 /**
  * Custom hook to access authentication context.
- * @returns {{ user, loading, authError, login, logout, clearAuthError }}
+ * @returns {{ user, loading, authError, login, loginWithGoogle, logout, clearAuthError }}
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
