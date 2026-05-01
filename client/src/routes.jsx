@@ -12,6 +12,7 @@ import LoginForm from './components/forms/LoginForm/LoginForm';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import UserDashboard from './pages/user/UserDashboard/UserDashboard';
 import SearchPage from './pages/SearchPage/SearchPage';
+import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
 import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
@@ -52,6 +53,10 @@ const routes = createBrowserRouter([
       {
         path: 'log-in',
         element: <LoginForm />,
+      },
+      {
+        path: 'auth/callback',
+        element: <OAuthCallback />,
       },
 
       // Authenticated Application Shell
