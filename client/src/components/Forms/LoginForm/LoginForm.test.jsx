@@ -7,6 +7,7 @@ import {
   waitFor,
 } from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
+import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import LoginForm from './LoginForm';
 
 // Global mock for navigation to avoid hoisting ReferenceErrors
@@ -30,15 +31,31 @@ vi.mock(
   }
 );
 
+vi.mock(
+  '../../../providers/ToastProvider/ToastProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useToast: vi.fn(),
+      ToastProvider: ({ children }) => children,
+    };
+  }
+);
+
 describe('LoginForm', () => {
   const mockLogin = vi.fn();
+  const mockLoginWithGoogle = vi.fn();
+  const mockShowToast = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useAuth).mockReturnValue({
       login: mockLogin,
+      loginWithGoogle: mockLoginWithGoogle,
       user: null,
     });
+    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
     // Restore safe supabase defaults after clearAllMocks
     supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
     supabase.auth.onAuthStateChange.mockReturnValue({
@@ -166,5 +183,62 @@ describe('LoginForm', () => {
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
     expect(screen.getByRole('button', { name: /logging in/i })).toBeDisabled();
+  });
+
+  it('renders the Google sign-in button and divider', () => {
+    render(<LoginForm />);
+
+    expect(screen.getByText(/^or$/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /continue with google/i })
+    ).toBeInTheDocument();
+  });
+
+  it('calls loginWithGoogle() when the Google button is clicked', async () => {
+    const user = userEvent.setup();
+    mockLoginWithGoogle.mockResolvedValueOnce({ data: {}, error: null });
+    render(<LoginForm />);
+
+    await user.click(
+      screen.getByRole('button', { name: /continue with google/i })
+    );
+
+    expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows the Google loading state and disables submit after click', async () => {
+    const user = userEvent.setup();
+    mockLoginWithGoogle.mockImplementation(() => new Promise(() => {}));
+    render(<LoginForm />);
+
+    await user.click(
+      screen.getByRole('button', { name: /continue with google/i })
+    );
+
+    expect(screen.getByText(/connecting to google/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /continue with google/i })
+    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: /enter/i })).toBeDisabled();
+  });
+
+  it('shows a toast when loginWithGoogle returns an error', async () => {
+    const user = userEvent.setup();
+    mockLoginWithGoogle.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Provider is not enabled' },
+    });
+    render(<LoginForm />);
+
+    await user.click(
+      screen.getByRole('button', { name: /continue with google/i })
+    );
+
+    await waitFor(() => {
+      expect(mockShowToast).toHaveBeenCalledWith(
+        'Provider is not enabled',
+        'error'
+      );
+    });
   });
 });
