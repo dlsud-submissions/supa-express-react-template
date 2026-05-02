@@ -49,9 +49,17 @@ const ProfilePage = () => {
   return (
     <div className={`${styles.container} animate-fade-in`}>
       <div className={styles.profileCard}>
-        <div className={styles.avatar}>
-          {profileUser.username?.charAt(0).toUpperCase()}
-        </div>
+        {profileUser.avatar_url ? (
+          <img
+            src={profileUser.avatar_url}
+            alt={`${profileUser.username}'s profile photo`}
+            className={styles.avatarImage}
+          />
+        ) : (
+          <div className={styles.avatar}>
+            {profileUser.username?.charAt(0).toUpperCase()}
+          </div>
+        )}
 
         <div className={styles.infoSection}>
           <h1 className={styles.username}>{profileUser.username}</h1>
