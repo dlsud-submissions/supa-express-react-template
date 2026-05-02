@@ -43,6 +43,12 @@ const OAuthCallback = () => {
     if (!user || handledRef.current) return;
 
     handledRef.current = true;
+
+    if (user.provider === 'google' && user.username_confirmed === false) {
+      navigate('/auth/complete-profile', { replace: true });
+      return;
+    }
+
     const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
     navigate(isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
   }, [navigate, user]);

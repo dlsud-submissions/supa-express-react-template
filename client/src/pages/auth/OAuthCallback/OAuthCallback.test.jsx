@@ -74,7 +74,13 @@ describe('OAuthCallback', () => {
 
   it('redirects standard users to /dashboard once the profile is ready', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 'user-1', role: 'USER', username: 'alex' },
+      user: {
+        id: 'user-1',
+        role: 'USER',
+        username: 'alex',
+        provider: 'email',
+        username_confirmed: true,
+      },
       loading: false,
       authError: null,
       clearAuthError: mockClearAuthError,
@@ -91,7 +97,13 @@ describe('OAuthCallback', () => {
 
   it('redirects admins to /admin-dashboard once the profile is ready', async () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: 'user-2', role: 'ADMIN', username: 'odin' },
+      user: {
+        id: 'user-2',
+        role: 'ADMIN',
+        username: 'odin',
+        provider: 'email',
+        username_confirmed: true,
+      },
       loading: false,
       authError: null,
       clearAuthError: mockClearAuthError,
@@ -101,6 +113,29 @@ describe('OAuthCallback', () => {
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard', {
+        replace: true,
+      });
+    });
+  });
+
+  it('redirects new Google users to complete-profile before the dashboard', async () => {
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        id: 'user-3',
+        role: 'USER',
+        username: 'user_abcd',
+        provider: 'google',
+        username_confirmed: false,
+      },
+      loading: false,
+      authError: null,
+      clearAuthError: mockClearAuthError,
+    });
+
+    renderCallback();
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/auth/complete-profile', {
         replace: true,
       });
     });
