@@ -32,6 +32,16 @@
     0 0 0 6px var(--primary-hover);
 }
 
+.avatarImage {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow:
+    0 0 0 4px var(--bg-color),
+    0 0 0 6px var(--primary-hover);
+}
+
 .infoSection {
   text-align: center;
   width: 100%;
