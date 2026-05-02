@@ -4,6 +4,7 @@ import { supabase } from '../../../lib/supabase.js';
 import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
+import GoogleAuthButton from '../../buttons/GoogleAuthButton/GoogleAuthButton';
 import AuthenticationError from '../../errors/AuthenticationError/AuthenticationError';
 import ValidationError from '../../errors/ValidationError/ValidationError';
 import styles from './LoginForm.module.css';
@@ -19,7 +20,7 @@ import styles from './LoginForm.module.css';
  */
 const LoginForm = () => {
   const { showToast } = useToast();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -29,6 +30,7 @@ const LoginForm = () => {
     isAuthError: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   /**
    * Updates local state and clears errors on input change.
@@ -107,6 +109,26 @@ const LoginForm = () => {
     }
   };
 
+  /**
+   * Starts the shared Google OAuth flow via AuthProvider.
+   */
+  const handleGoogleSignIn = async () => {
+    setErrorData({ message: '', errors: [], isAuthError: false });
+    setIsGoogleLoading(true);
+
+    try {
+      const { error } = await loginWithGoogle();
+
+      if (error) {
+        showToast(error.message || 'Google sign-in failed', 'error');
+        setIsGoogleLoading(false);
+      }
+    } catch (err) {
+      showToast(err.message || 'Google sign-in failed', 'error');
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className={`${styles.formContainer} animate-fade-in`}>
       <h2>Log In</h2>
@@ -149,11 +171,22 @@ const LoginForm = () => {
         <button
           type="submit"
           className={styles.submitBtn}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleLoading}
         >
           {isSubmitting ? 'Logging in...' : 'Enter'}
         </button>
       </form>
+
+      <div className={styles.divider} aria-hidden="true">
+        <span className={styles.dividerLine} />
+        <span className={styles.dividerText}>or</span>
+        <span className={styles.dividerLine} />
+      </div>
+
+      <GoogleAuthButton
+        onClick={handleGoogleSignIn}
+        isLoading={isGoogleLoading}
+      />
 
       <p className={styles.footerText}>
         Don't have an account?{' '}
