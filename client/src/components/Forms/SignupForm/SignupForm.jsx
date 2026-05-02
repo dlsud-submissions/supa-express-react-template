@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { authApi } from '../../../modules/api/auth/auth.api.js';
 import { signupSchema } from '../../../modules/validators/auth/auth.validator.js';
+import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
+import { useToast } from '../../../providers/ToastProvider/ToastProvider';
+import GoogleAuthButton from '../../buttons/GoogleAuthButton/GoogleAuthButton';
 import ValidationError from '../../errors/ValidationError/ValidationError';
 import styles from './SignupForm.module.css';
 
@@ -13,6 +16,8 @@ import styles from './SignupForm.module.css';
  * @returns {JSX.Element} The rendered signup form.
  */
 const SignupForm = () => {
+  const { loginWithGoogle } = useAuth();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -20,6 +25,7 @@ const SignupForm = () => {
   });
   const [errorData, setErrorData] = useState({ message: '', errors: [] });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   /**
@@ -77,6 +83,26 @@ const SignupForm = () => {
     }
   };
 
+  /**
+   * Starts the shared Google OAuth flow via AuthProvider.
+   */
+  const handleGoogleSignIn = async () => {
+    setErrorData({ message: '', errors: [] });
+    setIsGoogleLoading(true);
+
+    try {
+      const { error } = await loginWithGoogle();
+
+      if (error) {
+        showToast(error.message || 'Google sign-in failed', 'error');
+        setIsGoogleLoading(false);
+      }
+    } catch (err) {
+      showToast(err.message || 'Google sign-in failed', 'error');
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className={`${styles.formContainer} animate-fade-in`}>
       <h2>Create Account</h2>
@@ -124,11 +150,23 @@ const SignupForm = () => {
         <button
           type="submit"
           className={styles.submitBtn}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isGoogleLoading}
         >
           {isSubmitting ? 'Registering...' : 'Register'}
         </button>
       </form>
+
+      <div className={styles.divider} aria-hidden="true">
+        <span className={styles.dividerLine} />
+        <span className={styles.dividerText}>or</span>
+        <span className={styles.dividerLine} />
+      </div>
+
+      <GoogleAuthButton
+        onClick={handleGoogleSignIn}
+        isLoading={isGoogleLoading}
+        label="Sign up with Google"
+      />
 
       <p className={styles.footerText}>
         Already have an account?{' '}
