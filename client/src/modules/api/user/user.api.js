@@ -22,7 +22,9 @@ export const userApi = {
 
     return supabase
       .from('users')
-      .select('id, username, role, created_at, last_login')
+      .select(
+        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
+      )
       .eq('id', session.user.id)
       .single();
   },
@@ -36,8 +38,38 @@ export const userApi = {
   getById: async (userId) => {
     return supabase
       .from('users')
-      .select('id, username, role, created_at, last_login')
+      .select(
+        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
+      )
       .eq('id', userId)
+      .single();
+  },
+
+  /**
+   * Updates the current user's username and marks it as confirmed.
+   * - Requires an authenticated session and an RLS policy for self-updates.
+   * @param {string} username - The new username selected by the user.
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
+   */
+  updateUsername: async (username) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return { data: null, error: { message: 'No active session' } };
+    }
+
+    return supabase
+      .from('users')
+      .update({
+        username,
+        username_confirmed: true,
+      })
+      .eq('id', session.user.id)
+      .select(
+        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
+      )
       .single();
   },
 };

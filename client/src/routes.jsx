@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage/ProfilePage';
 import UserDashboard from './pages/user/UserDashboard/UserDashboard';
 import SearchPage from './pages/SearchPage/SearchPage';
 import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
+import CompleteProfile from './pages/auth/CompleteProfile/CompleteProfile';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
 import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
@@ -57,6 +58,15 @@ const routes = createBrowserRouter([
       {
         path: 'auth/callback',
         element: <OAuthCallback />,
+      },
+      {
+        element: <AuthRoute />,
+        children: [
+          {
+            path: 'auth/complete-profile',
+            element: <CompleteProfile />,
+          },
+        ],
       },
 
       // Authenticated Application Shell

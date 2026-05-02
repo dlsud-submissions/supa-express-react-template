@@ -5,11 +5,13 @@ import { userApi } from './user.api';
 vi.mock('../../../lib/supabase.js', () => {
   const selectChain = {
     select: vi.fn(),
+    update: vi.fn(),
     eq: vi.fn(),
     single: vi.fn(),
   };
   // Make each method return the chain so calls can be chained
   selectChain.select.mockReturnValue(selectChain);
+  selectChain.update.mockReturnValue(selectChain);
   selectChain.eq.mockReturnValue(selectChain);
 
   return {
@@ -29,6 +31,7 @@ describe('userApi', () => {
     // Re-wire chain after clearAllMocks
     const chain = supabase._chain;
     chain.select.mockReturnValue(chain);
+    chain.update.mockReturnValue(chain);
     chain.eq.mockReturnValue(chain);
     supabase.from.mockReturnValue(chain);
   });
@@ -83,6 +86,41 @@ describe('userApi', () => {
 
       expect(result.data).toBeNull();
       expect(result.error).toBeTruthy();
+    });
+  });
+
+  describe('updateUsername()', () => {
+    it('returns error when there is no active session', async () => {
+      supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+
+      const result = await userApi.updateUsername('fresh_name');
+
+      expect(result.data).toBeNull();
+      expect(result.error.message).toMatch(/no active session/i);
+    });
+
+    it('updates the current user username and confirms it', async () => {
+      const mockSession = { user: { id: 'user-uuid-123' } };
+      supabase.auth.getSession.mockResolvedValue({
+        data: { session: mockSession },
+      });
+      supabase._chain.single.mockResolvedValue({
+        data: {
+          id: 'user-uuid-123',
+          username: 'fresh_name',
+          username_confirmed: true,
+        },
+        error: null,
+      });
+
+      await userApi.updateUsername('fresh_name');
+
+      expect(supabase.from).toHaveBeenCalledWith('users');
+      expect(supabase._chain.update).toHaveBeenCalledWith({
+        username: 'fresh_name',
+        username_confirmed: true,
+      });
+      expect(supabase._chain.eq).toHaveBeenCalledWith('id', 'user-uuid-123');
     });
   });
 });
