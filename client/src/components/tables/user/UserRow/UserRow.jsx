@@ -73,9 +73,17 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
       <tr className={styles.row}>
         <td className={styles.cell}>
           <div className={styles.userInfo}>
-            <div className={`${styles.avatar} flex-center`}>
-              {targetUser.username.charAt(0).toUpperCase()}
-            </div>
+            {targetUser.avatar_url ? (
+              <img
+                src={targetUser.avatar_url}
+                alt={`${targetUser.username}'s profile photo`}
+                className={styles.avatarImage}
+              />
+            ) : (
+              <div className={`${styles.avatar} flex-center`}>
+                {targetUser.username.charAt(0).toUpperCase()}
+              </div>
+            )}
             <span className={styles.username}>{targetUser.username}</span>
           </div>
         </td>

@@ -28,6 +28,7 @@ describe('UserRow Component', () => {
     id: 'uuid-123',
     username: 'jdoe',
     role: 'USER',
+    avatar_url: null,
     created_at: '2024-01-01T00:00:00Z',
   };
 
@@ -55,6 +56,40 @@ describe('UserRow Component', () => {
     expect(
       screen.getByText(new Date('2024-01-01T00:00:00Z').toLocaleDateString())
     ).toBeInTheDocument();
+  });
+
+  it('renders a user avatar image when avatar_url is present', () => {
+    vi.mocked(useAuth).mockReturnValue({ user: { role: 'ADMIN' } });
+
+    render(
+      <table>
+        <tbody>
+          <UserRow
+            user={{ ...mockUser, avatar_url: 'https://example.com/avatar.png' }}
+            onUpdate={vi.fn()}
+          />
+        </tbody>
+      </table>
+    );
+
+    expect(screen.getByAltText("jdoe's profile photo")).toBeInTheDocument();
+  });
+
+  it('falls back to initials when avatar_url is missing', () => {
+    vi.mocked(useAuth).mockReturnValue({ user: { role: 'ADMIN' } });
+
+    render(
+      <table>
+        <tbody>
+          <UserRow user={{ ...mockUser, avatar_url: null }} onUpdate={vi.fn()} />
+        </tbody>
+      </table>
+    );
+
+    expect(screen.getByText('J')).toBeInTheDocument();
+    expect(
+      screen.queryByAltText("jdoe's profile photo")
+    ).not.toBeInTheDocument();
   });
 
   it('calls promoteUser and triggers onUpdate on promotion confirmation', async () => {

@@ -38,6 +38,7 @@ describe('ProfilePage Component', () => {
     id: 'admin-uuid-1',
     username: 'admin_boss',
     role: 'ADMIN',
+    avatar_url: null,
     created_at: '2024-01-01T00:00:00Z',
     last_login: null,
   };
@@ -46,6 +47,7 @@ describe('ProfilePage Component', () => {
     id: 'user-uuid-123',
     username: 'test_subject',
     role: 'USER',
+    avatar_url: null,
     created_at: '2024-03-15T00:00:00Z',
     last_login: '2024-04-01T10:00:00Z',
   };
@@ -77,6 +79,52 @@ describe('ProfilePage Component', () => {
     });
     expect(userApi.getProfile).toHaveBeenCalled();
     expect(userApi.getById).not.toHaveBeenCalled();
+  });
+
+  it('renders a profile photo when avatar_url is present', async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: mockCurrentUser });
+    vi.mocked(userApi.getProfile).mockResolvedValueOnce({
+      data: {
+        ...mockProfileData,
+        avatar_url: 'https://example.com/avatar.png',
+      },
+      error: null,
+    });
+
+    render(
+      <Routes>
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>,
+      { initialEntries: ['/profile'] }
+    );
+
+    await waitFor(() => {
+      expect(
+        screen.getByAltText("admin_boss's profile photo")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('falls back to initials when avatar_url is missing', async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: mockCurrentUser });
+    vi.mocked(userApi.getProfile).mockResolvedValueOnce({
+      data: { ...mockProfileData, avatar_url: null },
+      error: null,
+    });
+
+    render(
+      <Routes>
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>,
+      { initialEntries: ['/profile'] }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('A')).toBeInTheDocument();
+    });
+    expect(
+      screen.queryByAltText("admin_boss's profile photo")
+    ).not.toBeInTheDocument();
   });
 
   it('fetches and displays another user profile when an ID param is provided', async () => {
