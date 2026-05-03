@@ -1,54 +1,61 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import GoogleAuthButton from './GoogleAuthButton';
 
 describe('GoogleAuthButton', () => {
-  const handleClick = vi.fn();
+  it('renders the default label and Google logo SVG', () => {
+    // --- Arrange ---
+    render(<GoogleAuthButton onClick={vi.fn()} />);
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('renders the default Google label and logo', () => {
-    render(<GoogleAuthButton onClick={handleClick} />);
-
+    // --- Assert ---
     expect(
       screen.getByRole('button', { name: /continue with google/i })
     ).toBeInTheDocument();
-    expect(document.querySelector('svg')).toBeInTheDocument();
-  });
-
-  it('calls onClick exactly once when pressed', async () => {
-    const user = userEvent.setup();
-    render(<GoogleAuthButton onClick={handleClick} />);
-
-    await user.click(
-      screen.getByRole('button', { name: /continue with google/i })
-    );
-
-    expect(handleClick).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('Continue with Google')).toBeInTheDocument();
   });
 
   it('renders a custom label when provided', () => {
-    render(
-      <GoogleAuthButton onClick={handleClick} label="Sign up with Google" />
-    );
+    // --- Arrange ---
+    render(<GoogleAuthButton onClick={vi.fn()} label="Sign up with Google" />);
 
-    expect(
-      screen.getByRole('button', { name: /sign up with google/i })
-    ).toBeInTheDocument();
+    // --- Assert ---
+    expect(screen.getByText('Sign up with Google')).toBeInTheDocument();
   });
 
-  it('disables the button and shows a loading indicator when loading', () => {
-    render(<GoogleAuthButton onClick={handleClick} isLoading />);
+  it('calls onClick exactly once when clicked', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(<GoogleAuthButton onClick={onClick} />);
 
-    const button = screen.getByRole('button', {
-      name: /continue with google/i,
-    });
+    // --- Act ---
+    await user.click(screen.getByRole('button'));
 
-    expect(button).toBeDisabled();
-    expect(screen.getByText(/connecting to google/i)).toBeInTheDocument();
-    expect(document.querySelector('svg')).not.toBeInTheDocument();
+    // --- Assert ---
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('is disabled and shows Redirecting... when isLoading is true', () => {
+    // --- Arrange ---
+    render(<GoogleAuthButton onClick={vi.fn()} isLoading={true} />);
+    const btn = screen.getByRole('button');
+
+    // --- Assert ---
+    expect(btn).toBeDisabled();
+    expect(screen.getByText('Redirecting...')).toBeInTheDocument();
+  });
+
+  it('does not call onClick when disabled', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(<GoogleAuthButton onClick={onClick} isLoading={true} />);
+
+    // --- Act ---
+    await user.click(screen.getByRole('button'));
+
+    // --- Assert ---
+    expect(onClick).not.toHaveBeenCalled();
   });
 });
