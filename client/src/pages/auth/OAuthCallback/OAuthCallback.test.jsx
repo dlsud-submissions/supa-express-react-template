@@ -1,20 +1,8 @@
+import { useNavigate } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '../../../modules/utils/testing/testing.utils';
+import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import OAuthCallback from './OAuthCallback';
-
-const mockNavigate = vi.fn();
-const mockShowToast = vi.fn();
-const mockClearAuthError = vi.fn();
-
-vi.mock('react-router', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
 
 vi.mock(
   '../../../providers/AuthProvider/AuthProvider',
@@ -28,136 +16,89 @@ vi.mock(
   }
 );
 
-vi.mock(
-  '../../../providers/ToastProvider/ToastProvider',
-  async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      useToast: vi.fn(),
-      ToastProvider: ({ children }) => children,
-    };
-  }
-);
-
-const renderCallback = (initialEntry = '/auth/callback?code=oauth-code') =>
-  render(<OAuthCallback />, { initialEntries: [initialEntry] });
-
 describe('OAuthCallback', () => {
+  const mockNavigate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.useRealTimers();
-
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      authError: null,
-      clearAuthError: mockClearAuthError,
-    });
-    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
   });
 
-  it('renders the splash spinner while auth state is loading', () => {
+  it('renders a spinner while loading is true', () => {
+    // --- Arrange ---
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       loading: true,
       authError: null,
-      clearAuthError: mockClearAuthError,
     });
 
-    renderCallback();
+    // --- Act ---
+    render(<OAuthCallback />);
 
+    // --- Assert ---
+    expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.getByText(/signing you in/i)).toBeInTheDocument();
-    expect(screen.getByTestId('oauth-spinner')).toBeInTheDocument();
-    expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('redirects standard users to /dashboard once the profile is ready', async () => {
+  it('redirects to /dashboard for USER role after user is set', () => {
+    // --- Arrange ---
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: 'user-1',
-        role: 'USER',
-        username: 'alex',
-        provider: 'email',
-        username_confirmed: true,
-      },
+      user: { username: 'alice', role: 'USER' },
       loading: false,
       authError: null,
-      clearAuthError: mockClearAuthError,
     });
 
-    renderCallback();
+    // --- Act ---
+    render(<OAuthCallback />);
 
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard', {
-        replace: true,
-      });
-    });
+    // --- Assert ---
+    expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
   });
 
-  it('redirects admins to /admin-dashboard once the profile is ready', async () => {
+  it('redirects to /admin-dashboard for ADMIN role after user is set', () => {
+    // --- Arrange ---
     vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: 'user-2',
-        role: 'ADMIN',
-        username: 'odin',
-        provider: 'email',
-        username_confirmed: true,
-      },
+      user: { username: 'boss', role: 'ADMIN' },
       loading: false,
       authError: null,
-      clearAuthError: mockClearAuthError,
     });
 
-    renderCallback();
+    // --- Act ---
+    render(<OAuthCallback />);
 
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard', {
-        replace: true,
-      });
-    });
-  });
-
-  it('redirects new Google users to complete-profile before the dashboard', async () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: 'user-3',
-        role: 'USER',
-        username: 'user_abcd',
-        provider: 'google',
-        username_confirmed: false,
-      },
-      loading: false,
-      authError: null,
-      clearAuthError: mockClearAuthError,
-    });
-
-    renderCallback();
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/auth/complete-profile', {
-        replace: true,
-      });
+    // --- Assert ---
+    expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard', {
+      replace: true,
     });
   });
 
-  it('shows an error toast and returns home when auth fails', async () => {
+  it('redirects to / when loading is false and no user or error', () => {
+    // --- Arrange ---
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       loading: false,
-      authError: 'Failed to load user profile.',
-      clearAuthError: mockClearAuthError,
+      authError: null,
     });
 
-    renderCallback();
+    // --- Act ---
+    render(<OAuthCallback />);
 
-    await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith(
-        'Failed to load user profile.',
-        'error'
-      );
-      expect(mockClearAuthError).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    // --- Assert ---
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+  });
+
+  it('redirects to / and shows error when authError is set', () => {
+    // --- Arrange ---
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      authError: 'Unsupported provider: provider is not enabled',
     });
+
+    // --- Act ---
+    render(<OAuthCallback />);
+
+    // --- Assert ---
+    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
 });

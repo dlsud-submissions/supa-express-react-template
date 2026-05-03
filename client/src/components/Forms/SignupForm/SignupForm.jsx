@@ -13,6 +13,7 @@ import styles from './SignupForm.module.css';
  * - Calls authApi.signup() which uses Supabase Auth directly.
  * - Navigates to /log-in on success.
  * - Handles { data, error } return shape from Supabase SDK.
+ * - Supports Google OAuth via AuthProvider.loginWithGoogle().
  * @returns {JSX.Element} The rendered signup form.
  */
 const SignupForm = () => {
@@ -84,23 +85,23 @@ const SignupForm = () => {
   };
 
   /**
-   * Starts the shared Google OAuth flow via AuthProvider.
+   * Initiates the Google OAuth redirect via AuthProvider.loginWithGoogle().
+   * - Google accounts are created automatically on first login.
+   * - Surfaces any error (e.g. provider not enabled) as a toast.
    */
-  const handleGoogleSignIn = async () => {
-    setErrorData({ message: '', errors: [] });
+  const handleGoogleSignup = async () => {
     setIsGoogleLoading(true);
-
-    try {
-      const { error } = await loginWithGoogle();
-
-      if (error) {
-        showToast(error.message || 'Google sign-in failed', 'error');
-        setIsGoogleLoading(false);
-      }
-    } catch (err) {
-      showToast(err.message || 'Google sign-in failed', 'error');
+    const { error } = await loginWithGoogle();
+    if (error) {
+      showToast(
+        error.message?.includes('provider is not enabled')
+          ? 'Google sign-in is not configured yet. Please use username and password.'
+          : `Google sign-in failed: ${error.message}`,
+        'error'
+      );
       setIsGoogleLoading(false);
     }
+    // On success the browser redirects — loading stays true until navigation
   };
 
   return (
@@ -156,14 +157,12 @@ const SignupForm = () => {
         </button>
       </form>
 
-      <div className={styles.divider} aria-hidden="true">
-        <span className={styles.dividerLine} />
+      <div className={styles.divider}>
         <span className={styles.dividerText}>or</span>
-        <span className={styles.dividerLine} />
       </div>
 
       <GoogleAuthButton
-        onClick={handleGoogleSignIn}
+        onClick={handleGoogleSignup}
         isLoading={isGoogleLoading}
         label="Sign up with Google"
       />

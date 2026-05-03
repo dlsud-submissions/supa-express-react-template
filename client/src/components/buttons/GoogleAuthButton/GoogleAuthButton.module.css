@@ -1,64 +1,40 @@
 .button {
-  width: 100%;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1);
-  padding: 0.875rem 1rem;
-  border: 1px solid #dadce0;
-  border-radius: var(--space-1);
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-1) var(--space-2);
   background-color: #ffffff;
-  color: #1f1f1f;
-  font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-main);
   cursor: pointer;
   transition:
-    box-shadow 0.2s ease,
-    transform 0.1s ease,
-    background-color 0.2s ease;
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
   box-shadow: var(--shadow-sm);
 }
 
 .button:hover:not(:disabled) {
   background-color: #f8f9fa;
   box-shadow: var(--shadow-md);
+  border-color: #c6c9cc;
 }
 
 .button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-.button:focus-visible {
-  outline: 2px solid var(--primary-hover);
-  outline-offset: 2px;
+  background-color: #f1f3f4;
+  box-shadow: var(--shadow-sm);
 }
 
 .button:disabled {
+  opacity: 0.65;
   cursor: not-allowed;
-  opacity: 0.72;
 }
 
 .logo {
-  width: 1.25rem;
-  height: 1.25rem;
   flex-shrink: 0;
-}
-
-.label {
-  line-height: 1.2;
-}
-
-.spinner {
-  width: 1rem;
-  height: 1rem;
-  border: 2px solid rgba(66, 133, 244, 0.2);
-  border-top-color: #4285f4;
-  border-radius: 999px;
-  animation: google-auth-spin 0.8s linear infinite;
-}
-
-@keyframes google-auth-spin {
-  to {
-    transform: rotate(360deg);
-  }
 }

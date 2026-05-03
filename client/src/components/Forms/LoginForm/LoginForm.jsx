@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { supabase } from '../../../lib/supabase.js';
 import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
@@ -13,14 +12,13 @@ import styles from './LoginForm.module.css';
  * Login form component for user authentication.
  * - Delegates auth to AuthProvider.login() which calls Supabase directly.
  * - AuthProvider.onAuthStateChange handles setting user state after success.
- * - Reads role directly from public.users after login to determine redirect,
- *   because the AuthProvider context updates asynchronously and user would
- *   still be null at the point navigate() is called.
+ * - Redirects based on user role after the provider updates user state.
+ * - Supports Google OAuth via AuthProvider.loginWithGoogle().
  * @returns {JSX.Element} The rendered login form.
  */
 const LoginForm = () => {
   const { showToast } = useToast();
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({ username: '', password: '' });
@@ -78,25 +76,9 @@ const LoginForm = () => {
 
       showToast('Successfully logged in', 'success');
 
-      // AuthProvider sets user state asynchronously via onAuthStateChange, so
-      // reading `user` from context here would return the pre-login (null) value.
-      // Instead, fetch the profile directly from public.users using the fresh
-      // session to determine the correct redirect destination.
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      let role = 'USER';
-      if (session?.user?.id) {
-        const { data: profile } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        if (profile?.role) role = profile.role;
-      }
-
-      const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
+      // user state is set by AuthProvider via onAuthStateChange
+      // Navigate based on role — re-read from the updated context
+      const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
       navigate(isAdmin ? '/admin-dashboard' : '/dashboard');
     } catch (err) {
       setErrorData({
@@ -110,23 +92,24 @@ const LoginForm = () => {
   };
 
   /**
-   * Starts the shared Google OAuth flow via AuthProvider.
+   * Initiates the Google OAuth redirect via AuthProvider.loginWithGoogle().
+   * - Shows a loading state until the browser navigates away.
+   * - Surfaces any error (e.g. provider not enabled) as a toast.
    */
-  const handleGoogleSignIn = async () => {
-    setErrorData({ message: '', errors: [], isAuthError: false });
+  const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-
-    try {
-      const { error } = await loginWithGoogle();
-
-      if (error) {
-        showToast(error.message || 'Google sign-in failed', 'error');
-        setIsGoogleLoading(false);
-      }
-    } catch (err) {
-      showToast(err.message || 'Google sign-in failed', 'error');
+    const { error } = await loginWithGoogle();
+    if (error) {
+      // Provider not enabled or other config error — surface it clearly
+      showToast(
+        error.message?.includes('provider is not enabled')
+          ? 'Google sign-in is not configured yet. Please use username and password.'
+          : `Google sign-in failed: ${error.message}`,
+        'error'
+      );
       setIsGoogleLoading(false);
     }
+    // On success the browser redirects — loading stays true until navigation
   };
 
   return (
@@ -177,14 +160,12 @@ const LoginForm = () => {
         </button>
       </form>
 
-      <div className={styles.divider} aria-hidden="true">
-        <span className={styles.dividerLine} />
+      <div className={styles.divider}>
         <span className={styles.dividerText}>or</span>
-        <span className={styles.dividerLine} />
       </div>
 
       <GoogleAuthButton
-        onClick={handleGoogleSignIn}
+        onClick={handleGoogleLogin}
         isLoading={isGoogleLoading}
       />
 

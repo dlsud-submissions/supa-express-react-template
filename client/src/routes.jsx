@@ -1,29 +1,28 @@
 import { createBrowserRouter } from 'react-router';
-import App from './pages/App/App';
-import { ThemeProvider } from './providers/ThemeProvider/ThemeProvider';
-import { AuthProvider } from './providers/AuthProvider/AuthProvider';
-import { ToastProvider } from './providers/ToastProvider/ToastProvider';
-import MainLayout from './layouts/MainLayout/MainLayout';
-import AuthRoute from './routes/AuthRoute/AuthRoute';
-import AdminRoute from './routes/AdminRoute/AdminRoute';
-import LandingPage from './pages/LandingPage/LandingPage';
-import SignupForm from './components/forms/SignupForm/SignupForm';
 import LoginForm from './components/forms/LoginForm/LoginForm';
-import ProfilePage from './pages/ProfilePage/ProfilePage';
-import UserDashboard from './pages/user/UserDashboard/UserDashboard';
-import SearchPage from './pages/SearchPage/SearchPage';
-import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
-import CompleteProfile from './pages/auth/CompleteProfile/CompleteProfile';
+import SignupForm from './components/forms/SignupForm/SignupForm';
+import MainLayout from './layouts/MainLayout/MainLayout';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
-import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
+import App from './pages/App/App';
+import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
+import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
 import ForbiddenError from './pages/errors/ForbiddenError/ForbiddenError';
 import InternalServerError from './pages/errors/InternalServerError/InternalServerError';
-import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
+import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
+import LandingPage from './pages/LandingPage/LandingPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
+import SearchPage from './pages/SearchPage/SearchPage';
+import UserDashboard from './pages/user/UserDashboard/UserDashboard';
+import { AuthProvider } from './providers/AuthProvider/AuthProvider';
+import { ThemeProvider } from './providers/ThemeProvider/ThemeProvider';
+import { ToastProvider } from './providers/ToastProvider/ToastProvider';
+import AdminRoute from './routes/AdminRoute/AdminRoute';
+import AuthRoute from './routes/AuthRoute/AuthRoute';
 
 /**
  * Global application router configuration.
- * - Public: Standalone pages like Landing, Login, and Signup.
+ * - Public: Standalone pages like Landing, Login, Signup, and OAuthCallback.
  * - Private: Authenticated routes wrapped in MainLayout (Navbar/Sidebar).
  * - Admin: Role-gated routes nested within Auth protection.
  * @returns {Object} A React Router instance.
@@ -55,18 +54,10 @@ const routes = createBrowserRouter([
         path: 'log-in',
         element: <LoginForm />,
       },
+      // OAuth callback — public, handles Supabase code exchange on mount
       {
         path: 'auth/callback',
         element: <OAuthCallback />,
-      },
-      {
-        element: <AuthRoute />,
-        children: [
-          {
-            path: 'auth/complete-profile',
-            element: <CompleteProfile />,
-          },
-        ],
       },
 
       // Authenticated Application Shell

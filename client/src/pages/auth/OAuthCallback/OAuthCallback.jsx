@@ -1,113 +1,51 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router';
+import Spinner from '../../../components/feedback/Spinner/Spinner';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import styles from './OAuthCallback.module.css';
 
 /**
- * Public OAuth callback splash page.
- * - Waits for Supabase to exchange the OAuth code on return from Google.
- * - Redirects authenticated users to the correct dashboard once profile
- *   data is available from AuthProvider.
- * - Falls back to a toast and home redirect when the callback is invalid
- *   or the auth flow fails to produce a user session.
+ * OAuth callback splash page.
+ * - Supabase exchanges the ?code= param automatically on mount
+ *   because detectSessionInUrl: true is set in supabase.js.
+ * - This page shows a spinner while AuthProvider.onAuthStateChange
+ *   fires SIGNED_IN and populates the user context.
+ * - Redirects to the appropriate dashboard once user is available.
+ * - Redirects to / with a toast if the session never materializes
+ *   (e.g. expired or invalid code, provider not enabled).
  * @returns {JSX.Element}
  */
 const OAuthCallback = () => {
-  const { user, loading, authError, clearAuthError } = useAuth();
-  const { showToast } = useToast();
+  const { user, loading, authError } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [exchangeTimedOut, setExchangeTimedOut] = useState(false);
-  const handledRef = useRef(false);
-
-  const searchParams = useMemo(
-    () => new URLSearchParams(location.search),
-    [location.search]
-  );
-  const code = searchParams.get('code');
-  const providerError =
-    searchParams.get('error_description') || searchParams.get('error');
+  const { showToast } = useToast();
 
   useEffect(() => {
-    if (!code || user || authError || providerError) return undefined;
-
-    const timeoutId = window.setTimeout(() => {
-      setExchangeTimedOut(true);
-    }, 2500);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [authError, code, providerError, user]);
-
-  useEffect(() => {
-    if (!user || handledRef.current) return;
-
-    handledRef.current = true;
-
-    if (user.provider === 'google' && user.username_confirmed === false) {
-      navigate('/auth/complete-profile', { replace: true });
-      return;
-    }
-
-    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-    navigate(isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
-  }, [navigate, user]);
-
-  useEffect(() => {
-    if (handledRef.current || loading) return;
-
-    if (providerError) {
-      handledRef.current = true;
-      showToast(decodeURIComponent(providerError), 'error');
-      navigate('/', { replace: true });
-      return;
-    }
+    // Still waiting for Supabase to exchange the code — do nothing
+    if (loading) return;
 
     if (authError) {
-      handledRef.current = true;
       showToast(authError, 'error');
-      clearAuthError();
       navigate('/', { replace: true });
       return;
     }
 
-    if (!code) {
-      handledRef.current = true;
-      showToast('Missing Google OAuth callback code.', 'error');
-      navigate('/', { replace: true });
+    if (user) {
+      const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+      navigate(isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
       return;
     }
 
-    if (exchangeTimedOut) {
-      handledRef.current = true;
-      showToast('Google sign-in could not be completed. Please try again.', 'error');
-      navigate('/', { replace: true });
-    }
-  }, [
-    authError,
-    clearAuthError,
-    code,
-    exchangeTimedOut,
-    loading,
-    navigate,
-    providerError,
-    showToast,
-  ]);
+    // loading is false, no error, no user — something went wrong
+    showToast('Sign-in failed. Please try again.', 'error');
+    navigate('/', { replace: true });
+  }, [loading, user, authError, navigate, showToast]);
 
   return (
-    <main className={`${styles.page} animate-fade-in`}>
-      <section className={styles.card} aria-live="polite">
-        <div
-          className={styles.spinner}
-          aria-hidden="true"
-          data-testid="oauth-spinner"
-        />
-        <h1 className={styles.title}>Signing you in...</h1>
-        <p className={styles.message}>
-          We&apos;re finishing your Google login and loading your dashboard.
-        </p>
-      </section>
-    </main>
+    <div className={`${styles.container} flex-center animate-fade-in`}>
+      <Spinner size="3rem" message="Signing you in..." />
+    </div>
   );
 };
 
