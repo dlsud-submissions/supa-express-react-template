@@ -7,16 +7,16 @@ Conventions, patterns, and gotchas for writing tests in this project.
 ## Running Tests
 
 ```bash
-# Client — watch mode
+# Client - watch mode
 cd client && npm run test:watch
 
-# Client — run once (CI)
+# Client - run once (CI / verification)
 cd client && npm run test:run
 
-# Server — watch mode
+# Server - watch mode
 cd server && npm run test:watch
 
-# Server — run once
+# Server - run once
 cd server && npm test
 ```
 
@@ -29,76 +29,100 @@ cd server && npm test
 `client/vitest.setup.jsx` runs before every test file and handles:
 
 - `@testing-library/jest-dom` matchers
-- Lucide icon mocks (renders `<div data-testid="icon-<Name>" />` instead of SVG)
-- A global Supabase client mock (see below)
+- Lucide icon mocks
+- A global Supabase client mock
 - `localStorage` and `window.location` stubs
-- A global `react-router` mock that stubs `useNavigate`, `useRouteError`, and `Navigate`
+- A global `react-router` mock for `useNavigate`, `useRouteError`, and `Navigate`
 
 ### Custom Render
 
-Always import `render` from the testing utils, not directly from RTL:
+Always import `render` from the testing utilities, not directly from
+RTL:
 
 ```jsx
 import { render, screen } from '../../../modules/utils/testing/testing.utils';
 ```
 
-`customRender` wraps the component in `MemoryRouter + ThemeProvider + ToastProvider + AuthProvider`, so routing hooks and context hooks work without manual setup.
+`customRender` wraps the component in `MemoryRouter + ThemeProvider +
+ToastProvider + AuthProvider`, so routing hooks and context hooks work
+without manual setup.
 
 ---
 
-### Supabase Mock Pattern
+## Supabase Mock Pattern
 
-`vitest.setup.jsx` registers a **global mock** for `client/src/lib/supabase.js`
-that stubs both `supabase.auth.*` and the `supabase.from()` query builder chain.
-No test file needs to set up its own Supabase mock from scratch — just import
-`supabase` and override whatever you need for that test.
+`vitest.setup.jsx` registers a global mock for
+`client/src/lib/supabase.js` that stubs both `supabase.auth.*` and the
+`supabase.from()` query builder chain. Most tests should import
+`supabase` and override only the specific behavior they need.
 
-`afterEach` in the setup file calls `vi.clearAllMocks()` automatically,
-so stubs reset between tests without any manual cleanup.
-
-#### Auth stubs
+### Auth stubs
 
 ```jsx
 import { supabase } from '../../../lib/supabase.js';
 
-// Override a single method for one test
 vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
   data: { session: { user: { id: 'uuid-1' } } },
   error: null,
 });
 
-// Simulate a failed login
 vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
   data: null,
   error: { message: 'Invalid login credentials' },
 });
 ```
 
-#### Query chain stubs
+### OAuth mock pattern
 
-The query builder chain is accessible via `supabase._queryChain`.
-Every method (`select`, `eq`, `ilike`, `gte`, `lte`, `order`,
-`single`, etc.) returns the chain by default so calls can be composed freely.
+Use the same global auth mock for Google OAuth:
 
 ```jsx
 import { supabase } from '../../../lib/supabase.js';
 
-// Stub the terminal .single() call
+vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+  data: {
+    provider: 'google',
+    url: 'https://accounts.google.com/o/oauth2/v2/auth',
+  },
+  error: null,
+});
+
+vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+  data: null,
+  error: { message: 'Provider is not enabled' },
+});
+```
+
+This is the preferred pattern for:
+
+- `AuthProvider.test.jsx`
+- `LoginForm.test.jsx`
+- `SignupForm.test.jsx`
+
+### Query chain stubs
+
+The query builder chain is available via `supabase._queryChain`. Each
+method returns the chain by default, so tests usually only need to stub
+the terminal method.
+
+```jsx
+import { supabase } from '../../../lib/supabase.js';
+
 supabase._queryChain.single.mockResolvedValueOnce({
   data: { id: 'uuid-1', username: 'alice', role: 'USER' },
   error: null,
 });
 
-// Stub the terminal .order() call (list queries)
 supabase._queryChain.order.mockResolvedValue({
   data: [{ id: 'uuid-1', username: 'alice', role: 'USER' }],
   error: null,
 });
 ```
 
-#### Simulating auth state changes (AuthProvider tests)
+### Simulating auth state changes
 
-Capture the `onAuthStateChange` callback so tests can fire synthetic events:
+`AuthProvider` tests capture the `onAuthStateChange` callback so they
+can fire synthetic auth events:
 
 ```jsx
 const captureAuthStateChange = () => {
@@ -109,25 +133,15 @@ const captureAuthStateChange = () => {
   });
   return () => changeCallback;
 };
-
-// In the test:
-const getCallback = captureAuthStateChange();
-renderWithDeps(<TestConsumer />);
-await waitFor(() => expect(getCallback()).toBeDefined());
-
-await act(async () => {
-  getCallback()('SIGNED_IN', { user: { id: 'uuid-1' } });
-});
 ```
 
 ---
 
-### Auth Mock Pattern
+## Auth Mock Pattern
 
-`customRender` wraps the real `AuthProvider`, which fires an async
-`onAuthStateChange` subscription on mount. Always add this mock to any
-test file that renders a component using `useAuth`, to prevent background
-state updates from causing `act()` warnings:
+`customRender` wraps the real `AuthProvider`, which performs async auth
+work on mount. For component tests that use `useAuth`, prefer this
+mock:
 
 ```jsx
 vi.mock(
@@ -143,13 +157,40 @@ vi.mock(
 );
 ```
 
+### `username_confirmed` test data
+
+The first-login OAuth flow branches on `provider` and
+`username_confirmed`, so mocked user objects should set those fields
+explicitly:
+
+```jsx
+vi.mocked(useAuth).mockReturnValue({
+  user: {
+    id: 'user-123',
+    username: 'user_abcd',
+    role: 'USER',
+    provider: 'google',
+    username_confirmed: false,
+  },
+});
+```
+
+Recommended cases:
+
+- `provider: 'google', username_confirmed: false` -> redirect to
+  `/auth/complete-profile`
+- `provider: 'google', username_confirmed: true` -> go directly to the
+  dashboard
+- `provider: 'email', username_confirmed: true` -> never enter the
+  completion flow
+
 ---
 
-### API Mock Pattern
+## API Mock Pattern
 
-Mock the api module directly in component/page tests — never reach into
-`supabase` from inside a component test when the component already goes
-through an api module:
+Mock the API module directly in component and page tests. Do not reach
+into `supabase` from a component test when the component already uses
+an API wrapper.
 
 ```jsx
 vi.mock('../../modules/api/admin/admin.api', () => ({
@@ -161,28 +202,19 @@ vi.mock('../../modules/api/admin/admin.api', () => ({
 }));
 ```
 
-For **api module unit tests** (e.g. `admin.api.test.js`), mock `supabase`
-directly since that's what the module calls:
-
-```jsx
-import { supabase } from '../../../lib/supabase.js';
-
-// supabase is already mocked globally — just override what you need
-supabase._queryChain.order.mockResolvedValue({
-  data: [{ id: 'uuid-1', username: 'alice', role: 'USER' }],
-  error: null,
-});
-```
+For API module unit tests, mock `supabase` directly because that is
+what the module calls.
 
 ---
 
-### Mocking `useNavigate`
+## Mocking `useNavigate`
 
-`vitest.setup.jsx` already stubs `useNavigate` globally with `vi.fn(() => vi.fn())`.
-To assert navigation in a specific test, override it at the module level:
+`vitest.setup.jsx` already stubs `useNavigate` globally. To assert
+navigation in a specific test, override it at the module level:
 
 ```jsx
 const mockNavigate = vi.fn();
+
 vi.mock('react-router', async (importOriginal) => {
   const actual = await importOriginal();
   return { ...actual, useNavigate: () => mockNavigate };
@@ -191,7 +223,7 @@ vi.mock('react-router', async (importOriginal) => {
 
 ---
 
-### Async Components
+## Async Components
 
 Use `waitFor` for assertions that depend on async state:
 
@@ -203,49 +235,27 @@ await waitFor(() => {
 
 ### "Renders Nothing" Tests
 
-`customRender` always adds a wrapper div — `container.firstChild` is never null.
-Query for the component's content instead:
-
-```jsx
-// ✗ Don't do this
-expect(container.firstChild).toBeNull();
-
-// ✓ Do this instead
-expect(screen.queryByText(/some content/i)).not.toBeInTheDocument();
-```
+`customRender` always adds wrapper markup, so `container.firstChild` is
+not a reliable null check. Assert against visible app content instead.
 
 ### Portal Components
 
-Components that use `createPortal` (e.g. `ConfirmationModal`, `UserRowActions`
-dropdown) render into `document.body`, outside the component tree. RTL's
-`screen` queries the entire document body by default, so portalled content
-is found normally with `screen.getByText(...)`.
+Components that use `createPortal` render into `document.body`. RTL's
+`screen` queries search the whole document by default, so portalled
+content is still found normally.
 
 ---
 
 ## Server Tests (Vitest + Supertest)
 
-The server contains only middleware — all business logic lives in the
-Supabase-backed client api modules.
+The server contains only middleware. All business logic lives in the
+Supabase-backed client API modules.
 
-### Setup
-
-`server/vitest.setup.js` provides one global available in all test files:
+`server/vitest.setup.js` provides a reusable Express mock context:
 
 ```js
-// Chainable Express mock
 const { req, res, next } = mockExpressContext();
 ```
-
-### Middleware Tests
-
-Two test files cover the server middleware layer:
-
-- `server/src/middleware/app/app.middleware.test.js` — verifies CORS
-  and body parsing middleware are registered; verifies the 4-argument
-  error handler is mounted
-- `server/src/middleware/error/error.middleware.test.js` — verifies
-  error shape, status code passthrough, and validation error arrays
 
 ---
 
@@ -255,26 +265,37 @@ Two test files cover the server middleware layer:
 
 | Scenario                                                | Test it |
 | ------------------------------------------------------- | ------- |
-| Renders the right content given props                   | ✅      |
-| Calls callbacks with the right arguments on interaction | ✅      |
-| Conditional rendering based on props/state              | ✅      |
-| Loading / error / empty states                          | ✅      |
-| Navigation calls (`mockNavigate`)                       | ✅      |
-| Internal implementation details                         | ✗       |
+| Renders the right content given props                   | Yes     |
+| Calls callbacks with the right arguments on interaction | Yes     |
+| Conditional rendering based on props/state              | Yes     |
+| Loading / error / empty states                          | Yes     |
+| Navigation calls (`mockNavigate`)                       | Yes     |
+| Internal implementation details                         | No      |
 
-### Client api modules
+OAuth-specific coverage to keep:
+
+| Component / Flow                | What to assert |
+| ------------------------------- | -------------- |
+| `OAuthCallback`                 | Spinner, role redirect, error toast redirect, complete-profile redirect for unconfirmed Google users |
+| `GoogleAuthButton`              | Label, logo, click callback, loading/disabled state |
+| `AuthProvider.loginWithGoogle`  | `signInWithOAuth` args include `provider: 'google'` and `/auth/callback` |
+| `LoginForm` / `SignupForm`      | Google button render, click behavior, loading state, provider error toast |
+| `CompleteProfile`               | Username validation, successful `updateUsername`, redirect after save |
+
+### Client API modules
 
 | Scenario                                         | Test it |
 | ------------------------------------------------ | ------- |
-| Supabase SDK called with correct arguments       | ✅      |
-| Query chain filters applied correctly            | ✅      |
-| Sort column whitelisting (invalid → fallback)    | ✅      |
-| Error shape `{ data, error }` returned correctly | ✅      |
+| Supabase SDK called with correct arguments       | Yes     |
+| Query chain filters applied correctly            | Yes     |
+| Sort column whitelisting (invalid -> fallback)   | Yes     |
+| Error shape `{ data, error }` returned correctly | Yes     |
+| OAuth profile writes (`updateUsername`)          | Yes     |
 
 ### Server middleware
 
 | Scenario                                     | Test it |
 | -------------------------------------------- | ------- |
-| Middleware stack registered                  | ✅      |
-| Error handler returns correct HTTP status    | ✅      |
-| Validation error arrays included in response | ✅      |
+| Middleware stack registered                  | Yes     |
+| Error handler returns correct HTTP status    | Yes     |
+| Validation error arrays included in response | Yes     |
