@@ -1,5 +1,8 @@
 import { supabase } from '../../../lib/supabase.js';
 
+const USER_PROFILE_FIELDS =
+  'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login';
+
 /**
  * Service for user-related queries via Supabase.
  * - Replaces fetch-based Express /api/user/* endpoints.
@@ -22,9 +25,7 @@ export const userApi = {
 
     return supabase
       .from('users')
-      .select(
-        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
-      )
+      .select(USER_PROFILE_FIELDS)
       .eq('id', session.user.id)
       .single();
   },
@@ -38,9 +39,7 @@ export const userApi = {
   getById: async (userId) => {
     return supabase
       .from('users')
-      .select(
-        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
-      )
+      .select(USER_PROFILE_FIELDS)
       .eq('id', userId)
       .single();
   },
@@ -67,9 +66,7 @@ export const userApi = {
         username_confirmed: true,
       })
       .eq('id', session.user.id)
-      .select(
-        'id, username, role, avatar_url, provider, username_confirmed, created_at, last_login'
-      )
+      .select(USER_PROFILE_FIELDS)
       .single();
   },
 };
