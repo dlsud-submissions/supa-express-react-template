@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import ReturnHomeButton from './ReturnHomeButton';
 
@@ -23,25 +23,17 @@ describe('ReturnHomeButton', () => {
 
   it('renders with the default label and icon', () => {
     // Act
-    render(
-      <MemoryRouter>
-        <ReturnHomeButton />
-      </MemoryRouter>
-    );
+    render(<ReturnHomeButton />);
 
     // Assert
-    expect(screen.getByText('Return Home')).toBeDefined();
-    expect(screen.getByRole('button')).toBeDefined();
+    expect(screen.getByText('Return Home')).toBeInTheDocument();
+    expect(screen.getByRole('button')).toBeInTheDocument();
   });
 
   it('navigates to the correct path when clicked', () => {
     // Arrange
     const testPath = '/dashboard';
-    render(
-      <MemoryRouter>
-        <ReturnHomeButton to={testPath} />
-      </MemoryRouter>
-    );
+    render(<ReturnHomeButton to={testPath} />);
 
     // Act
     const button = screen.getByRole('button');
