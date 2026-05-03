@@ -126,6 +126,10 @@ Google OAuth is configured in Google Cloud and Supabase. The app does
 not need any extra OAuth-specific `.env` variables because the existing
 Supabase URL and anon key already support the client-side OAuth flow.
 
+If you want to test the in-app OAuth redirect lifecycle
+(`OAuthCallback` and `CompleteProfile`), finish this section before
+working through the auth flow described in [docs/architecture.md](./architecture.md).
+
 ### 5.1 Google Cloud Console
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/) and
@@ -172,6 +176,9 @@ http://localhost:5173
 - Apply `supabase/migrations/02_oauth_user_trigger.sql` before testing
   Google sign-up so the database trigger can create valid user rows for
   OAuth users
+- Apply `supabase/migrations/03_user_provider.sql` before testing the
+  username completion flow so new Google users can be routed through
+  `/auth/complete-profile`
 - The client already uses `detectSessionInUrl: true`, so Supabase will
   exchange the OAuth code automatically when the user returns to
   `/auth/callback`
