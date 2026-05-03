@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { signupSchema } from './auth.validator';
+import {
+  signupSchema,
+  usernameSchema,
+  usernameFieldSchema,
+} from './auth.validator';
 
 /**
  * Unit tests for client-side auth validation schemas.
@@ -44,5 +48,20 @@ describe('Auth Client Validators', () => {
     // Verify schema catches the mismatch via refinement
     expect(result.success).toBe(false);
     expect(result.error.issues[0].message).toBe("Passwords don't match");
+  });
+
+  it('should validate a username-only payload for OAuth completion', () => {
+    const result = usernameSchema.safeParse({ username: 'fresh_name' });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should share username rules across auth forms', () => {
+    const result = usernameFieldSchema.safeParse('no spaces allowed!');
+
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].message).toContain(
+      'Only letters, numbers, and underscores'
+    );
   });
 });
