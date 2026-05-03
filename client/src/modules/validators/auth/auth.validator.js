@@ -1,6 +1,28 @@
 import { z } from 'zod';
 
 /**
+ * Shared username rules used by signup and OAuth profile completion.
+ * - Mirrors server requirements for length and character types.
+ * @type {z.ZodString}
+ */
+export const usernameFieldSchema = z
+  .string()
+  .min(3, 'Username must be at least 3 characters.')
+  .max(20, 'Username must be under 20 characters.')
+  .regex(
+    /^[a-zA-Z0-9_]+$/,
+    'Only letters, numbers, and underscores allowed.'
+  );
+
+/**
+ * Zod schema for username-only form validation.
+ * @type {z.ZodType}
+ */
+export const usernameSchema = z.object({
+  username: usernameFieldSchema,
+});
+
+/**
  * Zod schema for User Signup.
  * - Mirrors server requirements for length and character types.
  * - Handles cross-field validation for password matching.
@@ -9,14 +31,7 @@ import { z } from 'zod';
 export const signupSchema = z
   .object({
     // Matches server username logic
-    username: z
-      .string()
-      .min(3, 'Username must be at least 3 characters.')
-      .max(20, 'Username must be under 20 characters.')
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        'Only letters, numbers, and underscores allowed.'
-      ),
+    username: usernameFieldSchema,
 
     // Matches server password complexity
     password: z
