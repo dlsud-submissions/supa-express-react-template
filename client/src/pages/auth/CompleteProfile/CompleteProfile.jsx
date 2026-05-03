@@ -1,21 +1,10 @@
-import { z } from 'zod';
 import { useState } from 'react';
+import { usernameSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import { userApi } from '../../../modules/api/user/user.api';
 import ValidationError from '../../../components/errors/ValidationError/ValidationError';
 import styles from './CompleteProfile.module.css';
-
-const usernameSchema = z.object({
-  username: z
-    .string()
-    .min(3, 'Username must be at least 3 characters.')
-    .max(20, 'Username must be under 20 characters.')
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      'Only letters, numbers, and underscores allowed.'
-    ),
-});
 
 /**
  * Username completion page for first-time Google OAuth users.
