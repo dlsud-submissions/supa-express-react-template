@@ -12,7 +12,7 @@ vi.unmock('./AuthProvider');
  * Test consumer that exposes auth context values for assertions.
  */
 const TestConsumer = () => {
-  const { user, authError, clearAuthError, login, loginWithGoogle, logout } =
+  const { user, authError, clearAuthError, login, logout, loginWithGoogle } =
     useAuth();
   return (
     <div>
@@ -21,7 +21,7 @@ const TestConsumer = () => {
       <button onClick={() => login({ username: 'alice', password: 'pw' })}>
         Login
       </button>
-      <button onClick={loginWithGoogle}>Google Login</button>
+      <button onClick={loginWithGoogle}>Login with Google</button>
       <button onClick={clearAuthError}>Clear Error</button>
       <button onClick={logout}>Logout</button>
     </div>
@@ -61,7 +61,6 @@ describe('AuthProvider', () => {
     vi.mocked(supabase.auth.onAuthStateChange).mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     });
-    supabase.auth.signInWithOAuth = vi.fn();
   });
 
   it('renders guest state when no session exists on mount', async () => {
@@ -142,35 +141,13 @@ describe('AuthProvider', () => {
     renderWithDeps(<TestConsumer />);
 
     // --- Act ---
-    await user.click(screen.getByRole('button', { name: /^login$/i }));
+    await user.click(screen.getByRole('button', { name: /login/i }));
 
     // --- Assert ---
     await waitFor(() => {
       expect(screen.getByTestId('error')).toHaveTextContent(
         'Invalid login credentials'
       );
-    });
-  });
-
-  it('calls signInWithOAuth with the Google callback redirect', async () => {
-    // --- Arrange ---
-    const user = userEvent.setup();
-    supabase.auth.signInWithOAuth.mockResolvedValueOnce({
-      data: { provider: 'google', url: 'https://accounts.google.com/o/oauth2/v2/auth' },
-      error: null,
-    });
-
-    renderWithDeps(<TestConsumer />);
-
-    // --- Act ---
-    await user.click(screen.getByRole('button', { name: /google login/i }));
-
-    // --- Assert ---
-    expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
   });
 
@@ -184,7 +161,7 @@ describe('AuthProvider', () => {
 
     renderWithDeps(<TestConsumer />);
 
-    await user.click(screen.getByRole('button', { name: /^login$/i }));
+    await user.click(screen.getByRole('button', { name: /login/i }));
     await waitFor(() => {
       expect(screen.getByTestId('error')).not.toHaveTextContent('No Error');
     });
@@ -210,5 +187,54 @@ describe('AuthProvider', () => {
 
     // --- Assert ---
     expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('calls signInWithOAuth with google provider and correct redirectTo', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+      data: {},
+      error: null,
+    });
+
+    renderWithDeps(<TestConsumer />);
+
+    // --- Act ---
+    await user.click(
+      screen.getByRole('button', { name: /login with google/i })
+    );
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
+        provider: 'google',
+        options: expect.objectContaining({
+          redirectTo: expect.stringContaining('/auth/callback'),
+        }),
+      });
+    });
+  });
+
+  it('sets authError when loginWithGoogle returns an error', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Unsupported provider: provider is not enabled' },
+    });
+
+    renderWithDeps(<TestConsumer />);
+
+    // --- Act ---
+    await user.click(
+      screen.getByRole('button', { name: /login with google/i })
+    );
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent(
+        'Unsupported provider: provider is not enabled'
+      );
+    });
   });
 });

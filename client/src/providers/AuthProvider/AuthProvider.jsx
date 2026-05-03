@@ -1,17 +1,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase.js';
-import { authApi } from '../../modules/api/auth/auth.api.js';
-import { userApi } from '../../modules/api/user/user.api.js';
 
 const AuthContext = createContext(null);
 
 /**
  * Provider component for authentication state and actions.
  * - Subscribes to Supabase onAuthStateChange for real-time session sync.
- * - On SIGNED_IN: fetches the user's public.users profile via userApi.getById.
+ * - On SIGNED_IN: fetches the user's public.users profile row for role data.
  * - On SIGNED_OUT: clears all user state.
- * - Rehydrates session from localStorage on mount via authApi.checkStatus.
- * - Delegates login/logout to authApi; profile fetch to userApi.
+ * - Rehydrates session from localStorage on mount via getSession().
  * @param {Object} props
  * @param {React.ReactNode} props.children
  * @returns {JSX.Element}
@@ -22,8 +19,8 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // Rehydrate session on mount via authApi.checkStatus
-    authApi.checkStatus().then(({ data: { session } }) => {
+    // Rehydrate session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         fetchProfile(session.user.id);
       } else {
@@ -31,8 +28,7 @@ export const AuthProvider = ({ children }) => {
       }
     });
 
-    // Subscribe to auth state changes — onAuthStateChange has no api-layer
-    // equivalent and is intentionally kept as a provider-level lifecycle concern
+    // Subscribe to auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -49,12 +45,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Fetches the user's row from public.users via userApi.getById.
+   * Fetches the user's row from public.users to get username and role.
    * @param {string} userId - The auth.users UUID.
    */
   const fetchProfile = async (userId) => {
     try {
-      const { data, error } = await userApi.getById(userId);
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, username, role, created_at, last_login')
+        .eq('id', userId)
+        .single();
 
       if (error) throw error;
 
@@ -69,39 +69,47 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Signs in via authApi.login.
+   * Signs in via Supabase Auth.
    * - onAuthStateChange handles setting user state after success.
    * @param {Object} credentials - { username, password }
    * @returns {Promise<{ error }>}
    */
   const login = async ({ username, password }) => {
     setAuthError(null);
-    const { error } = await authApi.login({ username, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: `${username}@app.local`,
+      password,
+    });
     if (error) setAuthError(error.message);
     return { error };
   };
 
   /**
-   * Starts the Google OAuth redirect flow through Supabase Auth.
-   * - Redirect returns to the dedicated public callback route.
-   * @returns {Promise<import('@supabase/supabase-js').OAuthResponse>}
+   * Initiates Google OAuth sign-in via Supabase Auth.
+   * - Redirects the browser to Google's consent screen.
+   * - On return, Supabase exchanges the code and fires onAuthStateChange.
+   * @returns {Promise<{ error }>}
    */
   const loginWithGoogle = async () => {
     setAuthError(null);
-    return supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
+    if (error) {
+      setAuthError(error.message);
+    }
+    return { error };
   };
 
   /**
-   * Signs out via authApi.logout.
+   * Signs out via Supabase Auth.
    * - onAuthStateChange handles clearing user state after success.
    */
   const logout = async () => {
-    await authApi.logout();
+    await supabase.auth.signOut();
   };
 
   /**
