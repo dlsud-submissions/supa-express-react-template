@@ -64,30 +64,30 @@
   color: white;
 }
 
-.submitBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.72;
-}
-
+/* ── OAuth divider ─────────────────────────────── */
 .divider {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
+  margin: var(--space-3) 0 var(--space-2);
 }
 
-.dividerLine {
+.divider::before,
+.divider::after {
+  content: '';
   flex: 1;
   height: 1px;
   background-color: var(--border-color);
 }
 
 .dividerText {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+  margin: 0 var(--space-2);
+  font-size: var(--text-xs);
   color: var(--text-color);
-  opacity: 0.7;
-  text-transform: lowercase;
+  opacity: 0.5;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
 }
 
 .footerText {

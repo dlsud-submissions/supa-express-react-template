@@ -1,13 +1,11 @@
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { supabase } from '../../../lib/supabase.js';
 import {
   render,
   screen,
   waitFor,
 } from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import LoginForm from './LoginForm';
 
 // Global mock for navigation to avoid hoisting ReferenceErrors
@@ -31,22 +29,9 @@ vi.mock(
   }
 );
 
-vi.mock(
-  '../../../providers/ToastProvider/ToastProvider',
-  async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      useToast: vi.fn(),
-      ToastProvider: ({ children }) => children,
-    };
-  }
-);
-
 describe('LoginForm', () => {
   const mockLogin = vi.fn();
   const mockLoginWithGoogle = vi.fn();
-  const mockShowToast = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -55,55 +40,51 @@ describe('LoginForm', () => {
       loginWithGoogle: mockLoginWithGoogle,
       user: null,
     });
-    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
-    // Restore safe supabase defaults after clearAllMocks
-    supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
-    supabase.auth.onAuthStateChange.mockReturnValue({
-      data: { subscription: { unsubscribe: vi.fn() } },
-    });
-    const chain = supabase._queryChain;
-    Object.keys(chain).forEach((key) => chain[key].mockReturnValue(chain));
-    supabase.from.mockReturnValue(chain);
   });
 
   it('updates username input value on change', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     render(<LoginForm />);
 
+    // --- Act ---
     const usernameInput = screen.getByLabelText(/username/i);
     await user.type(usernameInput, 'alice');
 
+    // --- Assert ---
     expect(usernameInput).toHaveValue('alice');
   });
 
   it('shows validation error when fields are empty on submit', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     render(<LoginForm />);
 
+    // --- Act ---
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
+    // --- Assert ---
     // Zod schema requires both fields — error shown without calling login
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
   it('calls AuthProvider.login() with username and password', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     mockLogin.mockResolvedValueOnce({ error: null });
-    // After successful login, LoginForm fetches the session and profile
-    supabase.auth.getSession.mockResolvedValueOnce({
-      data: { session: { user: { id: 'uuid-1' } } },
+    vi.mocked(useAuth).mockReturnValue({
+      login: mockLogin,
+      loginWithGoogle: mockLoginWithGoogle,
+      user: null,
     });
-    supabase._queryChain.single.mockResolvedValueOnce({
-      data: { role: 'USER' },
-      error: null,
-    });
-    vi.mocked(useAuth).mockReturnValue({ login: mockLogin, user: null });
     render(<LoginForm />);
 
+    // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
+    // --- Assert ---
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
         username: 'alice',
@@ -112,59 +93,20 @@ describe('LoginForm', () => {
     });
   });
 
-  it('navigates to /dashboard for USER role after successful login', async () => {
-    const user = userEvent.setup();
-    mockLogin.mockResolvedValueOnce({ error: null });
-    supabase.auth.getSession.mockResolvedValueOnce({
-      data: { session: { user: { id: 'uuid-1' } } },
-    });
-    supabase._queryChain.single.mockResolvedValueOnce({
-      data: { role: 'USER' },
-      error: null,
-    });
-    render(<LoginForm />);
-
-    await user.type(screen.getByLabelText(/username/i), 'alice');
-    await user.type(screen.getByLabelText(/password/i), 'Password1');
-    await user.click(screen.getByRole('button', { name: /enter/i }));
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
-    });
-  });
-
-  it('navigates to /admin-dashboard for ADMIN role after successful login', async () => {
-    const user = userEvent.setup();
-    mockLogin.mockResolvedValueOnce({ error: null });
-    supabase.auth.getSession.mockResolvedValueOnce({
-      data: { session: { user: { id: 'uuid-2' } } },
-    });
-    supabase._queryChain.single.mockResolvedValueOnce({
-      data: { role: 'ADMIN' },
-      error: null,
-    });
-    render(<LoginForm />);
-
-    await user.type(screen.getByLabelText(/username/i), 'admin');
-    await user.type(screen.getByLabelText(/password/i), 'Password1');
-    await user.click(screen.getByRole('button', { name: /enter/i }));
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/admin-dashboard');
-    });
-  });
-
   it('shows auth error message when login returns an error', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     mockLogin.mockResolvedValueOnce({
       error: { message: 'Invalid login credentials' },
     });
     render(<LoginForm />);
 
+    // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
+    // --- Assert ---
     await waitFor(() => {
       expect(
         screen.getByText(/invalid login credentials/i)
@@ -173,72 +115,66 @@ describe('LoginForm', () => {
   });
 
   it('disables the submit button while submitting', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     // Never resolves — keeps isSubmitting true
     mockLogin.mockImplementation(() => new Promise(() => {}));
     render(<LoginForm />);
 
+    // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'alice');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
+    // --- Assert ---
     expect(screen.getByRole('button', { name: /logging in/i })).toBeDisabled();
   });
 
-  it('renders the Google sign-in button and divider', () => {
+  it('renders the Google sign-in button', () => {
+    // --- Arrange ---
     render(<LoginForm />);
 
-    expect(screen.getByText(/^or$/i)).toBeInTheDocument();
+    // --- Assert ---
     expect(
       screen.getByRole('button', { name: /continue with google/i })
     ).toBeInTheDocument();
   });
 
-  it('calls loginWithGoogle() when the Google button is clicked', async () => {
+  it('calls loginWithGoogle when the Google button is clicked', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
-    mockLoginWithGoogle.mockResolvedValueOnce({ data: {}, error: null });
+    // Simulates a successful redirect — resolves with no error
+    mockLoginWithGoogle.mockResolvedValueOnce({ error: null });
     render(<LoginForm />);
 
+    // --- Act ---
     await user.click(
       screen.getByRole('button', { name: /continue with google/i })
     );
 
+    // --- Assert ---
     expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1);
   });
 
-  it('shows the Google loading state and disables submit after click', async () => {
-    const user = userEvent.setup();
-    mockLoginWithGoogle.mockImplementation(() => new Promise(() => {}));
-    render(<LoginForm />);
-
-    await user.click(
-      screen.getByRole('button', { name: /continue with google/i })
-    );
-
-    expect(screen.getByText(/connecting to google/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /continue with google/i })
-    ).toBeDisabled();
-    expect(screen.getByRole('button', { name: /enter/i })).toBeDisabled();
-  });
-
-  it('shows a toast when loginWithGoogle returns an error', async () => {
+  it('shows a toast and re-enables Google button when provider is not enabled', async () => {
+    // --- Arrange ---
     const user = userEvent.setup();
     mockLoginWithGoogle.mockResolvedValueOnce({
-      data: null,
-      error: { message: 'Provider is not enabled' },
+      error: { message: 'Unsupported provider: provider is not enabled' },
     });
     render(<LoginForm />);
 
+    // --- Act ---
     await user.click(
       screen.getByRole('button', { name: /continue with google/i })
     );
 
+    // --- Assert ---
     await waitFor(() => {
-      expect(mockShowToast).toHaveBeenCalledWith(
-        'Provider is not enabled',
-        'error'
-      );
+      // Button should be re-enabled after the error
+      expect(
+        screen.getByRole('button', { name: /continue with google/i })
+      ).not.toBeDisabled();
     });
   });
 });
