@@ -85,8 +85,17 @@ const Navbar = () => {
         {user && (
           <div className={styles.userSection}>
             <div className={styles.info}>
-              <span className={styles.username}>{user.username}</span>
-              <span className={styles.roleLabel}>{user.role}</span>
+              {user.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={`${user.username} avatar`}
+                  className={styles.avatarThumbnail}
+                />
+              ) : null}
+              <div>
+                <span className={styles.username}>{user.username}</span>
+                <span className={styles.roleLabel}>{user.role}</span>
+              </div>
             </div>
             <button
               onClick={() => setShowConfirm(true)}
