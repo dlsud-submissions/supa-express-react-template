@@ -81,6 +81,28 @@ describe('ProfilePage Component', () => {
     expect(userApi.getById).not.toHaveBeenCalled();
   });
 
+  it('renders the user email when present', async () => {
+    vi.mocked(useAuth).mockReturnValue({ user: mockCurrentUser });
+    vi.mocked(userApi.getProfile).mockResolvedValueOnce({
+      data: {
+        ...mockProfileData,
+        email: 'admin_boss@example.com',
+      },
+      error: null,
+    });
+
+    render(
+      <Routes>
+        <Route path="/profile" element={<ProfilePage />} />
+      </Routes>,
+      { initialEntries: ['/profile'] }
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('admin_boss@example.com')).toBeInTheDocument();
+    });
+  });
+
   it('renders a profile photo when avatar_url is present', async () => {
     vi.mocked(useAuth).mockReturnValue({ user: mockCurrentUser });
     vi.mocked(userApi.getProfile).mockResolvedValueOnce({

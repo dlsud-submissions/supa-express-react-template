@@ -1,13 +1,13 @@
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it, vi } from 'vitest';
 import {
   render,
   screen,
   waitFor,
 } from '../../../modules/utils/testing/testing.utils';
-import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi } from 'vitest';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import { useTheme } from '../../../providers/ThemeProvider/ThemeProvider';
+import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import Navbar from './Navbar';
 
 vi.mock(
@@ -64,6 +64,29 @@ describe('Navbar Component', () => {
 
     // --- Assert ---
     expect(mockToggleTheme).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders an avatar thumbnail when the user has an avatar_url', async () => {
+    // --- Arrange ---
+    vi.mocked(useAuth).mockReturnValue({
+      user: {
+        username: 'john_doe',
+        role: 'USER',
+        avatar_url: 'https://example.com/avatar.png',
+      },
+      logout: vi.fn(),
+    });
+    vi.mocked(useToast).mockReturnValue({ showToast: vi.fn() });
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'light',
+      toggleTheme: vi.fn(),
+    });
+
+    // --- Act ---
+    render(<Navbar />);
+
+    // --- Assert ---
+    expect(screen.getByAltText('john_doe avatar')).toBeInTheDocument();
   });
 
   it('calls logout and shows toast when confirmed', async () => {

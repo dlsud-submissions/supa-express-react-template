@@ -54,6 +54,13 @@
   font-weight: var(--weight-bold);
 }
 
+.email {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-2);
+}
+
 .roleBadge {
   display: inline-block;
   padding: var(--space-0-5) var(--space-2);

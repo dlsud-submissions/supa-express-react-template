@@ -72,6 +72,14 @@
   gap: var(--space-1);
 }
 
+.avatarThumbnail {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
 .username {
   font-size: var(--text-sm);
   font-weight: var(--weight-bold);
