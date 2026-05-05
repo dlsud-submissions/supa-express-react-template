@@ -63,6 +63,9 @@ const ProfilePage = () => {
 
         <div className={styles.infoSection}>
           <h1 className={styles.username}>{profileUser.username}</h1>
+          {profileUser.email ? (
+            <span className={styles.email}>{profileUser.email}</span>
+          ) : null}
           <span className={styles.roleBadge}>{profileUser.role}</span>
         </div>
 
