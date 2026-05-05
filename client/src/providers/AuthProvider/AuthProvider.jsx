@@ -109,9 +109,27 @@ export const AuthProvider = ({ children }) => {
   /**
    * Signs out via Supabase Auth.
    * - onAuthStateChange handles clearing user state after success.
+   * - Also clears the local user state as a fallback if the event never fires.
    */
   const logout = async () => {
-    await supabase.auth.signOut();
+    setAuthError(null);
+
+    try {
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        setAuthError(error.message ?? 'Logout failed.');
+        return { error };
+      }
+
+      setUser(null);
+      setLoading(false);
+      return { error: null };
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error('Logout failed.');
+      setAuthError(error.message);
+      return { error };
+    }
   };
 
   /**

@@ -1,11 +1,11 @@
+import { Home, LogOut, Menu, Moon, Settings, Sun, User, X } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router';
-import { Home, User, Settings, Sun, Moon, LogOut, Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import { useTheme } from '../../../providers/ThemeProvider/ThemeProvider';
-import SearchBar from '../../search/SearchBar/SearchBar';
+import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import ConfirmationModal from '../../feedback/modals/ConfirmationModal/ConfirmationModal';
+import SearchBar from '../../search/SearchBar/SearchBar';
 import styles from './Navbar.module.css';
 
 /**
@@ -20,6 +20,7 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const { showToast } = useToast();
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -34,9 +35,16 @@ const Navbar = () => {
    * - Closes the confirmation modal.
    */
   const handleConfirmLogout = async () => {
-    await logout();
-    showToast('Logged out successfully', 'info');
+    const { error } = await logout();
     setShowConfirm(false);
+
+    if (error) {
+      showToast(error.message || 'Logout failed', 'error');
+      return;
+    }
+
+    showToast('Logged out successfully', 'info');
+    navigate('/');
   };
 
   return (

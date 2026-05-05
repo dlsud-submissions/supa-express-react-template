@@ -92,7 +92,7 @@ describe('Navbar Component', () => {
   it('calls logout and shows toast when confirmed', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    const mockLogout = vi.fn().mockResolvedValue();
+    const mockLogout = vi.fn().mockResolvedValue({ error: null });
     const mockShowToast = vi.fn();
     vi.mocked(useAuth).mockReturnValue({
       user: { username: 'john_doe', role: 'USER' },
@@ -113,6 +113,35 @@ describe('Navbar Component', () => {
     await waitFor(() => {
       expect(mockLogout).toHaveBeenCalled();
       expect(mockShowToast).toHaveBeenCalledWith(expect.any(String), 'info');
+    });
+  });
+
+  it('shows an error toast when logout fails', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    const mockLogout = vi.fn().mockResolvedValue({
+      error: { message: 'Sign out failed' },
+    });
+    const mockShowToast = vi.fn();
+    vi.mocked(useAuth).mockReturnValue({
+      user: { username: 'john_doe', role: 'USER' },
+      logout: mockLogout,
+    });
+    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'light',
+      toggleTheme: vi.fn(),
+    });
+
+    // --- Act ---
+    render(<Navbar />);
+    await user.click(screen.getByRole('button', { name: /log out/i }));
+    await user.click(screen.getByRole('button', { name: /^logout$/i }));
+
+    // --- Assert ---
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalled();
+      expect(mockShowToast).toHaveBeenCalledWith('Sign out failed', 'error');
     });
   });
 });
