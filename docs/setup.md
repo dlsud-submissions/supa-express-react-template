@@ -76,7 +76,31 @@ The migration is idempotent — running it more than once is safe.
 
 ---
 
-## 3. Get Your API Keys
+## 3. Apply the OAuth trigger migration
+
+The new `03_handle_new_user_oauth.sql` migration updates the auth signup trigger
+for Google OAuth users. It slugifies `raw_user_meta_data->>'full_name'`, appends a
+numeric suffix when a username collision exists, and stores `avatar_url`,
+`email`, and `provider='google'` for new OAuth-created profiles.
+
+**Option A — Supabase Dashboard SQL Editor**
+
+1. Go to **SQL Editor → New query**
+2. Paste the contents of `supabase/migrations/03_handle_new_user_oauth.sql`
+3. Click **Run**
+
+**Option B — Supabase CLI**
+
+```bash
+supabase db push
+```
+
+This migration should be applied after `supabase/migrations/02_oauth_user_trigger.sql`
+and before testing Google sign-up flows.
+
+---
+
+## 4. Get Your API Keys
 
 1. In your Supabase project go to **Settings → API**
 2. Copy the following values — you will need them for your `.env` files:
@@ -92,7 +116,7 @@ The migration is idempotent — running it more than once is safe.
 
 ---
 
-## 4. Configure `.env` Files
+## 5. Configure `.env` Files
 
 ```bash
 cp server/.env.example server/.env
@@ -120,7 +144,7 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 
 ---
 
-## 5. Configure Google OAuth
+## 6. Configure Google OAuth
 
 Google OAuth is configured in Google Cloud and Supabase. The app does
 not need any extra OAuth-specific `.env` variables because the existing
@@ -185,7 +209,7 @@ http://localhost:5173
 
 ---
 
-## 6. Seed the Database (Optional)
+## 7. Seed the Database (Optional)
 
 To create the four default test accounts (Bryan, Odin, Damon, Boss),
 run the seed SQL after your schema is applied:
@@ -206,11 +230,11 @@ node src/db/seed.js
 Both approaches create the same four development users and keep the
 password as `testpass123` for each account:
 
-| Username | Role |
-| -------- | ---- |
-| `Bryan`  | `USER` |
-| `Odin`   | `ADMIN` |
-| `Damon`  | `USER` |
+| Username | Role          |
+| -------- | ------------- |
+| `Bryan`  | `USER`        |
+| `Odin`   | `ADMIN`       |
+| `Damon`  | `USER`        |
 | `Boss`   | `SUPER_ADMIN` |
 
 See [Issue #17](https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues/17)
@@ -218,7 +242,7 @@ for the full seed implementation.
 
 ---
 
-## 7. Install Dependencies
+## 8. Install Dependencies
 
 ```bash
 # From the project root
@@ -227,7 +251,7 @@ npm run install:all
 
 ---
 
-## 8. Start the App
+## 9. Start the App
 
 ```bash
 # From the project root
@@ -240,15 +264,15 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 
 ## Troubleshooting
 
-| Problem                                                        | Fix                                                                                                                |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                 |
-| `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                               |
-| Login returns "Invalid login credentials"                      | The user may not exist yet — run `supabase/seed.sql`, use the Node seed helper, or sign up manually               |
-| User row missing after signup                                  | Check that `supabase/schema.sql` was applied and the auth triggers exist before running later migrations           |
-| Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor               |
-| Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                           |
-| `avatar_url` is missing for a Google user                      | The column was added in Migration 02 — re-run it; existing rows will be back-filled automatically                  |
+| Problem                                                        | Fix                                                                                                                        |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                         |
+| `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                                       |
+| Login returns "Invalid login credentials"                      | The user may not exist yet — run `supabase/seed.sql`, use the Node seed helper, or sign up manually                        |
+| User row missing after signup                                  | Check that `supabase/schema.sql` was applied and the auth triggers exist before running later migrations                   |
+| Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor                       |
+| Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                                   |
+| `avatar_url` is missing for a Google user                      | The column was added in Migration 02 — re-run it; existing rows will be back-filled automatically                          |
 | `redirect_uri_mismatch` from Google                            | Ensure the Google OAuth client has `https://<your-project-ref>.supabase.co/auth/v1/callback` as an authorized redirect URI |
-| `Unsupported provider: provider is not enabled`                | Open **Supabase Dashboard -> Authentication -> Providers -> Google** and confirm Google is enabled with valid credentials |
-| CORS error in browser                                          | Ensure `CORS_ALLOWED_ORIGINS` in `server/.env` matches your Vite dev server URL (default: `http://localhost:5173`) |
+| `Unsupported provider: provider is not enabled`                | Open **Supabase Dashboard -> Authentication -> Providers -> Google** and confirm Google is enabled with valid credentials  |
+| CORS error in browser                                          | Ensure `CORS_ALLOWED_ORIGINS` in `server/.env` matches your Vite dev server URL (default: `http://localhost:5173`)         |
