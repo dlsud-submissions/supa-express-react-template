@@ -33,6 +33,10 @@ $$;
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username VARCHAR(20) UNIQUE NOT NULL,
+  email TEXT,
+  avatar_url TEXT,
+  provider TEXT NOT NULL DEFAULT 'email',
+  username_confirmed BOOLEAN NOT NULL DEFAULT TRUE,
   role public.app_role NOT NULL DEFAULT 'USER',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_login TIMESTAMPTZ DEFAULT NULL
@@ -43,6 +47,18 @@ COMMENT ON TABLE public.users IS
 
 COMMENT ON COLUMN public.users.username IS
   'App-facing username shown in the UI and used for app.local auth emails.';
+
+COMMENT ON COLUMN public.users.email IS
+  'The OAuth email address provided by the identity provider when available.';
+
+COMMENT ON COLUMN public.users.avatar_url IS
+  'The avatar URL provided by the OAuth provider when available.';
+
+COMMENT ON COLUMN public.users.provider IS
+  'The auth provider that created this profile row, such as email or google.';
+
+COMMENT ON COLUMN public.users.username_confirmed IS
+  'Whether the user explicitly confirmed the username shown in the app.';
 
 -- -----------------------------------------------------------------------------
 -- 3. Grants required for the client-side Supabase SDK
@@ -100,13 +116,42 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+  derived_username TEXT;
+  provider_value TEXT;
+  confirmed BOOLEAN;
 BEGIN
-  INSERT INTO public.users (id, username, role, created_at)
+  derived_username := COALESCE(
+    NEW.raw_user_meta_data->>'username',
+    split_part(NEW.email, '@', 1)
+  );
+
+  provider_value := COALESCE(
+    NEW.raw_app_meta_data->>'provider',
+    'email'
+  );
+
+  confirmed := provider_value <> 'google';
+
+  INSERT INTO public.users (
+    id,
+    username,
+    role,
+    created_at,
+    email,
+    avatar_url,
+    provider,
+    username_confirmed
+  )
   VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'username', split_part(NEW.email, '@', 1)),
+    derived_username,
     'USER',
-    COALESCE(NEW.created_at, NOW())
+    COALESCE(NEW.created_at, NOW()),
+    NULLIF(NEW.raw_user_meta_data->>'email', ''),
+    NEW.raw_user_meta_data->>'avatar_url',
+    provider_value,
+    confirmed
   )
   ON CONFLICT (id) DO NOTHING;
 

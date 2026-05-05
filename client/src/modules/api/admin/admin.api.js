@@ -15,7 +15,7 @@ export const adminApi = {
   getAllUsers: async () => {
     return supabase
       .from('users')
-      .select('id, username, role, created_at')
+      .select('id, username, email, role, provider, avatar_url, created_at')
       .order('created_at', { ascending: true });
   },
 
