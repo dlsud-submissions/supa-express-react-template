@@ -62,6 +62,7 @@ vi.mock('./src/lib/supabase.js', () => {
     auth: {
       signUp: vi.fn(),
       signInWithPassword: vi.fn(),
+      signInWithOAuth: vi.fn(),
       signOut: vi.fn(),
       // MUST return a Promise — AuthProvider calls .getSession().then(...)
       getSession: vi.fn().mockResolvedValue({ data: { session: null } }),

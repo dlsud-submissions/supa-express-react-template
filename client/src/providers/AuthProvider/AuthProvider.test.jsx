@@ -141,7 +141,7 @@ describe('AuthProvider', () => {
     renderWithDeps(<TestConsumer />);
 
     // --- Act ---
-    await user.click(screen.getByRole('button', { name: /login/i }));
+    await user.click(screen.getByRole('button', { name: /^login$/i }));
 
     // --- Assert ---
     await waitFor(() => {
@@ -161,7 +161,7 @@ describe('AuthProvider', () => {
 
     renderWithDeps(<TestConsumer />);
 
-    await user.click(screen.getByRole('button', { name: /login/i }));
+    await user.click(screen.getByRole('button', { name: /^login$/i }));
     await waitFor(() => {
       expect(screen.getByTestId('error')).not.toHaveTextContent('No Error');
     });
