@@ -37,6 +37,21 @@ export const authApi = {
   },
 
   /**
+   * Initiates Google OAuth sign-in via Supabase Auth.
+   * - Redirects the browser to Google's consent screen.
+   * - On return, Supabase exchanges the code and fires onAuthStateChange.
+   * @returns {Promise<{ error }>}
+   */
+  loginWithGoogle: async () => {
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+  },
+
+  /**
    * Signs the current user out and clears the local session.
    * @returns {Promise<{ error }>}
    */
