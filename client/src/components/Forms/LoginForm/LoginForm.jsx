@@ -6,6 +6,7 @@ import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import GoogleAuthButton from '../../buttons/GoogleAuthButton/GoogleAuthButton';
 import AuthenticationError from '../../errors/AuthenticationError/AuthenticationError';
 import ValidationError from '../../errors/ValidationError/ValidationError';
+import OAuthDivider from '../shared/OAuthDivider/OAuthDivider';
 import styles from './LoginForm.module.css';
 
 /**
@@ -160,9 +161,7 @@ const LoginForm = () => {
         </button>
       </form>
 
-      <div className={styles.divider}>
-        <span className={styles.dividerText}>or</span>
-      </div>
+      <OAuthDivider />
 
       <GoogleAuthButton
         onClick={handleGoogleLogin}
