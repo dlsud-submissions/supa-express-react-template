@@ -9,7 +9,7 @@ import { useAuth } from '../../providers/AuthProvider/AuthProvider';
  * @returns {JSX.Element}
  */
 const AuthRoute = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, needsUsername } = useAuth();
   const location = useLocation();
 
   if (loading) return null;
@@ -26,6 +26,11 @@ const AuthRoute = () => {
         replace
       />
     );
+  }
+
+  // Redirect Google users with a collision username to complete-profile
+  if (needsUsername && location.pathname !== '/complete-profile') {
+    return <Navigate to="/complete-profile" replace />;
   }
 
   // Render children (protected content)
