@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Link, Navigate } from 'react-router';
 import { useAuth } from '../../providers/AuthProvider/AuthProvider';
+import { useToast } from '../../providers/ToastProvider/ToastProvider';
+import GoogleAuthButton from '../components/buttons/GoogleAuthButton/GoogleAuthButton';
 import styles from './LandingPage.module.css';
 
 /**
@@ -9,7 +12,9 @@ import styles from './LandingPage.module.css';
  * @returns {JSX.Element} The rendered landing page.
  */
 const LandingPage = () => {
-  const { user } = useAuth();
+  const { user, loginWithGoogle } = useAuth();
+  const { showToast } = useToast();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   // Redirect authenticated users away from landing
   if (user) {
@@ -18,6 +23,26 @@ const LandingPage = () => {
     const destination = isAdmin ? '/admin-dashboard' : '/dashboard';
     return <Navigate to={destination} replace />;
   }
+
+  /**
+   * Initiates the Google OAuth redirect via AuthProvider.loginWithGoogle().
+   * - Shows a loading state until the browser navigates away.
+   * - Surfaces any error (e.g. provider not enabled) as a toast.
+   */
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    const { error } = await loginWithGoogle();
+    if (error) {
+      showToast(
+        error.message?.includes('provider is not enabled')
+          ? 'Google sign-in is not configured yet. Please use the Login page.'
+          : `Google sign-in failed: ${error.message}`,
+        'error'
+      );
+      setIsGoogleLoading(false);
+    }
+    // On success the browser redirects — loading stays true until navigation
+  };
 
   return (
     <div className={`${styles.container} animate-fade-in`}>
@@ -37,6 +62,13 @@ const LandingPage = () => {
           <Link to="/log-in" className={styles.secondaryButton}>
             Log In
           </Link>
+          <div className={styles.googleButtonWrapper}>
+            <GoogleAuthButton
+              onClick={handleGoogleLogin}
+              isLoading={isGoogleLoading}
+              label="Google"
+            />
+          </div>
         </div>
       </section>
 
