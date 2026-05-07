@@ -64,32 +64,6 @@
   color: white;
 }
 
-/* ── OAuth divider ─────────────────────────────── */
-.divider {
-  position: relative;
-  display: flex;
-  align-items: center;
-  margin: var(--space-3) 0 var(--space-2);
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background-color: var(--border-color);
-}
-
-.dividerText {
-  margin: 0 var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--text-color);
-  opacity: 0.5;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
 .footerText {
   /* Use global typography */
   margin-top: var(--space-3);
