@@ -1,30 +1,40 @@
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '../../../modules/utils/testing/testing.utils';
 import { userApi } from '../../../modules/api/user/user.api';
+import {
+  render,
+  screen,
+  waitFor,
+} from '../../../modules/utils/testing/testing.utils';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 import CompleteProfile from './CompleteProfile';
 
 const mockShowToast = vi.fn();
 
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
-vi.mock('../../../providers/ToastProvider/ToastProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useToast: vi.fn(),
-    ToastProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/ToastProvider/ToastProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useToast: vi.fn(),
+      ToastProvider: ({ children }) => children,
+    };
+  }
+);
 
 vi.mock('../../../modules/api/user/user.api', () => ({
   userApi: {
@@ -43,6 +53,7 @@ describe('CompleteProfile', () => {
         provider: 'google',
         username_confirmed: false,
       },
+      clearNeedsUsername: vi.fn(),
     });
     vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast });
   });
@@ -111,9 +122,7 @@ describe('CompleteProfile', () => {
     await user.click(screen.getByRole('button', { name: /save username/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/username already taken/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/username already taken/i)).toBeInTheDocument();
     });
   });
 });

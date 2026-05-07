@@ -17,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [needsUsername, setNeedsUsername] = useState(false);
 
   useEffect(() => {
     // Rehydrate session on mount
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }) => {
         await fetchProfile(session.user.id);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setNeedsUsername(false);
         setAuthError(null);
         setLoading(false);
       }
@@ -61,13 +63,28 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       setUser(data);
+      setNeedsUsername(resolveNeedsUsername(data));
       setAuthError(null);
     } catch (err) {
       setUser(null);
+      setNeedsUsername(false);
       setAuthError('Failed to load user profile.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const resolveNeedsUsername = (profile) => {
+    if (!profile || profile.provider !== 'google') {
+      return false;
+    }
+
+    const username = profile.username ?? '';
+    const hasCollisionSuffix = /_[0-9]+$/.test(username);
+
+    return (
+      !username || hasCollisionSuffix || profile.username_confirmed === false
+    );
   };
 
   /**
@@ -139,16 +156,22 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
   };
 
+  const clearNeedsUsername = () => {
+    setNeedsUsername(false);
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
         authError,
+        needsUsername,
         login,
         loginWithGoogle,
         logout,
         clearAuthError,
+        clearNeedsUsername,
       }}
     >
       {children}

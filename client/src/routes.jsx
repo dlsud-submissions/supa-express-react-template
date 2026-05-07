@@ -5,6 +5,7 @@ import MainLayout from './layouts/MainLayout/MainLayout';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
 import App from './pages/App/App';
+import CompleteProfile from './pages/auth/CompleteProfile/CompleteProfile';
 import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
 import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
 import ForbiddenError from './pages/errors/ForbiddenError/ForbiddenError';
@@ -69,6 +70,10 @@ const routes = createBrowserRouter([
             element: <AuthRoute />,
             children: [
               // Default landing for standard users
+              {
+                path: 'complete-profile',
+                element: <CompleteProfile />,
+              },
               {
                 path: 'dashboard',
                 element: <UserDashboard />,

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import ConflictError from '../../../components/errors/ConflictError/ConflictError';
+import ValidationError from '../../../components/errors/ValidationError/ValidationError';
+import { userApi } from '../../../modules/api/user/user.api';
 import { usernameSchema } from '../../../modules/validators/auth/auth.validator.js';
 import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
-import { userApi } from '../../../modules/api/user/user.api';
-import ValidationError from '../../../components/errors/ValidationError/ValidationError';
 import styles from './CompleteProfile.module.css';
 
 /**
@@ -13,12 +14,12 @@ import styles from './CompleteProfile.module.css';
  * @returns {JSX.Element}
  */
 const CompleteProfile = () => {
-  const { user } = useAuth();
+  const { user, clearNeedsUsername } = useAuth();
   const { showToast } = useToast();
   const [username, setUsername] = useState(user?.username || '');
   const [errorData, setErrorData] = useState({ message: '', errors: [] });
+  const [conflictMessage, setConflictMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const destination =
     user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN'
       ? '/admin-dashboard'
@@ -27,6 +28,7 @@ const CompleteProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorData({ message: '', errors: [] });
+    setConflictMessage('');
 
     const validation = usernameSchema.safeParse({ username });
 
@@ -43,9 +45,16 @@ const CompleteProfile = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await userApi.updateUsername(username);
+      const { data, error } = await userApi.updateUsername(username);
 
       if (error) {
+        if (error.code === '23505') {
+          setConflictMessage(
+            'That username is already taken. Please choose another.'
+          );
+          return;
+        }
+
         setErrorData({
           message: error.message || 'Unable to save username',
           errors: [],
@@ -53,6 +62,7 @@ const CompleteProfile = () => {
         return;
       }
 
+      clearNeedsUsername();
       showToast('Username updated successfully', 'success');
       window.location.assign(destination);
     } catch (err) {
@@ -75,7 +85,11 @@ const CompleteProfile = () => {
           </p>
         </div>
 
-        <ValidationError message={errorData.message} errors={errorData.errors} />
+        <ConflictError message={conflictMessage} />
+        <ValidationError
+          message={errorData.message}
+          errors={errorData.errors}
+        />
 
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <div className={styles.inputGroup}>
