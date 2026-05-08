@@ -91,6 +91,13 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
           <span className={styles.roleBadge}>{targetUser.role}</span>
         </td>
         <td className={styles.cell}>
+          <span
+            className={`${styles.providerBadge} ${styles[`provider-${targetUser.provider}`]}`}
+          >
+            {targetUser.provider === 'google' ? 'Google' : 'Email'}
+          </span>
+        </td>
+        <td className={styles.cell}>
           <span className={styles.date}>
             {/* Supabase returns created_at in snake_case */}
             {new Date(targetUser.created_at).toLocaleDateString()}

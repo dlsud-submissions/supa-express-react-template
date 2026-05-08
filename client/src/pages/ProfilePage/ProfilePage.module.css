@@ -61,6 +61,14 @@
   margin-bottom: var(--space-2);
 }
 
+.badgeGroup {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+
 .roleBadge {
   display: inline-block;
   padding: var(--space-0-5) var(--space-2);
@@ -72,6 +80,28 @@
   text-transform: uppercase;
   color: var(--text-color);
   letter-spacing: 0.05em;
+}
+
+.providerBadge {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-2);
+  border-radius: var(--space-4);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: capitalize;
+  letter-spacing: 0.05em;
+}
+
+.provider-google {
+  background-color: var(--primary-hover);
+  color: white;
+  border: 1px solid var(--primary-hover);
+}
+
+.provider-email {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-text);
 }
 
 .detailsGrid {

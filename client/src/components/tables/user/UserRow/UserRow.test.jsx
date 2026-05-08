@@ -28,6 +28,7 @@ describe('UserRow Component', () => {
     id: 'uuid-123',
     username: 'jdoe',
     role: 'USER',
+    provider: 'email',
     avatar_url: null,
     created_at: '2024-01-01T00:00:00Z',
   };
@@ -81,7 +82,10 @@ describe('UserRow Component', () => {
     render(
       <table>
         <tbody>
-          <UserRow user={{ ...mockUser, avatar_url: null }} onUpdate={vi.fn()} />
+          <UserRow
+            user={{ ...mockUser, avatar_url: null }}
+            onUpdate={vi.fn()}
+          />
         </tbody>
       </table>
     );
