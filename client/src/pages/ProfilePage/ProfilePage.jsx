@@ -66,7 +66,14 @@ const ProfilePage = () => {
           {profileUser.email ? (
             <span className={styles.email}>{profileUser.email}</span>
           ) : null}
-          <span className={styles.roleBadge}>{profileUser.role}</span>
+          <div className={styles.badgeGroup}>
+            <span className={styles.roleBadge}>{profileUser.role}</span>
+            <span
+              className={`${styles.providerBadge} ${styles[`provider-${profileUser.provider}`]}`}
+            >
+              {profileUser.provider === 'google' ? 'Google' : 'Email'}
+            </span>
+          </div>
         </div>
 
         <div className={styles.detailsGrid}>

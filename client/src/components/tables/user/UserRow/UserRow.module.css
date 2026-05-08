@@ -51,6 +51,27 @@
   border: 1px solid var(--border-color);
 }
 
+.providerBadge {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-1);
+  border-radius: 4px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  text-transform: capitalize;
+}
+
+.provider-google {
+  background-color: var(--primary-hover);
+  color: white;
+  border: 1px solid var(--primary-hover);
+}
+
+.provider-email {
+  background-color: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-text);
+}
+
 .date {
   color: var(--text-color);
   opacity: 0.7;

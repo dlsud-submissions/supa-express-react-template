@@ -18,7 +18,7 @@
 export const sectionConfig = {
   users: {
     label: 'Users',
-    columns: ['User', 'Role', 'Joined', 'Actions'],
+    columns: ['User', 'Role', 'Provider', 'Joined', 'Actions'],
     emptyMessage: 'No users matched your search.',
     filters: [
       {
