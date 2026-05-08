@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, Navigate } from 'react-router';
+import GoogleAuthButton from '../../components/buttons/GoogleAuthButton/GoogleAuthButton';
 import { useAuth } from '../../providers/AuthProvider/AuthProvider';
 import { useToast } from '../../providers/ToastProvider/ToastProvider';
-import GoogleAuthButton from '../components/buttons/GoogleAuthButton/GoogleAuthButton';
 import styles from './LandingPage.module.css';
 
 /**
