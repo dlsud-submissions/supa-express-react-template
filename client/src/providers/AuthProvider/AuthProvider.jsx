@@ -1,5 +1,12 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 import { supabase } from '../../lib/supabase.js';
+import { authApi } from '../../modules/api/auth/auth.api';
 
 const AuthContext = createContext(null);
 
@@ -18,6 +25,34 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [needsUsername, setNeedsUsername] = useState(false);
+
+  /**
+   * Fetches the user's row from public.users to get username and role.
+   * @param {string} userId - The auth.users UUID.
+   */
+  const fetchProfile = useCallback(async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select(
+          'id, username, email, role, avatar_url, provider, username_confirmed, created_at, last_login'
+        )
+        .eq('id', userId)
+        .single();
+
+      if (error) throw error;
+
+      setUser(data);
+      setNeedsUsername(resolveNeedsUsername(data));
+      setAuthError(null);
+    } catch {
+      setUser(null);
+      setNeedsUsername(false);
+      setAuthError('Failed to load user profile.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     // Rehydrate session on mount
@@ -44,35 +79,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  /**
-   * Fetches the user's row from public.users to get username and role.
-   * @param {string} userId - The auth.users UUID.
-   */
-  const fetchProfile = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select(
-          'id, username, email, role, avatar_url, provider, username_confirmed, created_at, last_login'
-        )
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
-
-      setUser(data);
-      setNeedsUsername(resolveNeedsUsername(data));
-      setAuthError(null);
-    } catch (err) {
-      setUser(null);
-      setNeedsUsername(false);
-      setAuthError('Failed to load user profile.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchProfile]);
 
   const resolveNeedsUsername = (profile) => {
     if (!profile || profile.provider !== 'google') {
@@ -95,10 +102,7 @@ export const AuthProvider = ({ children }) => {
    */
   const login = async ({ username, password }) => {
     setAuthError(null);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: `${username}@app.local`,
-      password,
-    });
+    const { error } = await authApi.login({ username, password });
     if (error) setAuthError(error.message);
     return { error };
   };
@@ -111,12 +115,7 @@ export const AuthProvider = ({ children }) => {
    */
   const loginWithGoogle = async () => {
     setAuthError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    const { error } = await authApi.loginWithGoogle();
     if (error) {
       setAuthError(error.message);
     }
@@ -132,7 +131,7 @@ export const AuthProvider = ({ children }) => {
     setAuthError(null);
 
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await authApi.logout();
 
       if (error) {
         setAuthError(error.message ?? 'Logout failed.');
