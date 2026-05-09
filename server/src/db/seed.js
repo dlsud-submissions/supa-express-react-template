@@ -1,5 +1,5 @@
-import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import 'dotenv/config';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -26,21 +26,39 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
  *   because the trigger always inserts with the default role of 'USER'.
  */
 const SEED_USERS = [
-  { username: 'Bryan', password: 'testpass123', role: 'USER' },
-  { username: 'Odin', password: 'testpass123', role: 'ADMIN' },
-  { username: 'Damon', password: 'testpass123', role: 'USER' },
-  { username: 'Boss', password: 'testpass123', role: 'SUPER_ADMIN' },
+  {
+    username: 'Bryan',
+    email: 'bryan@seed.test',
+    password: 'testpass123',
+    role: 'USER',
+  },
+  {
+    username: 'Odin',
+    email: 'odin@seed.test',
+    password: 'testpass123',
+    role: 'ADMIN',
+  },
+  {
+    username: 'Damon',
+    email: 'damon@seed.test',
+    password: 'testpass123',
+    role: 'USER',
+  },
+  {
+    username: 'Boss',
+    email: 'boss@seed.test',
+    password: 'testpass123',
+    role: 'SUPER_ADMIN',
+  },
 ];
 
 /**
  * Creates a Supabase auth user and waits for the DB trigger to insert
  * the corresponding public.users row.
- * @param {{ username: string, password: string, role: string }} seedUser
+ * @param {{ username: string, email: string, password: string, role: string }} seedUser
  * @returns {Promise<string|null>} The created user's UUID, or null on failure.
  */
-async function createAuthUser({ username, password }) {
-  const email = `${username.toLowerCase()}@app.local`;
-
+async function createAuthUser({ username, email, password }) {
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
@@ -93,8 +111,23 @@ async function patchRole(userId, username, role) {
 }
 
 /**
- * Main seed runner.
+ * Marks a seeded public.users row as verified.
+ * @param {string} userId
+ * @param {string} username
  */
+async function patchVerification(userId, username) {
+  const { error } = await supabaseAdmin
+    .from('users')
+    .update({ is_verified: true })
+    .eq('id', userId);
+
+  if (error) {
+    console.error(`  ✗  Failed to verify ${username}:`, error.message);
+  } else {
+    console.log(`  ✓  Verified ${username}`);
+  }
+}
+
 async function seed() {
   console.log('\n🌱  Seeding Supabase users...\n');
 
@@ -103,6 +136,7 @@ async function seed() {
     const userId = await createAuthUser(seedUser);
     if (userId) {
       await patchRole(userId, seedUser.username, seedUser.role);
+      await patchVerification(userId, seedUser.username);
     }
   }
 

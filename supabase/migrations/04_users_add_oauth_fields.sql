@@ -1,4 +1,4 @@
--- Migration: 02_users_add_oauth_fields.sql
+-- Migration: 04_users_add_oauth_fields.sql
 -- Purpose:   Extend public.users to retain OAuth profile fields.
 
 ALTER TABLE public.users
