@@ -100,7 +100,53 @@ and before testing Google sign-up flows.
 
 ---
 
-## 4. Get Your API Keys
+## 4. Apply email-first auth migration
+
+The new `04_email_first_auth.sql` migration switches the schema to use real
+login emails instead of synthetic `username@app.local` addresses. It
+backfills `public.users.email` from `auth.users.email`, makes `username`
+nullable, adds `is_verified`, and updates the auth trigger to preserve
+OAuth users without forcing a username.
+
+**Option A — Supabase Dashboard SQL Editor**
+
+1. Go to **SQL Editor → New query**
+2. Paste the contents of `supabase/migrations/04_email_first_auth.sql`
+3. Click **Run**
+
+**Option B — Supabase CLI**
+
+```bash
+supabase db push
+```
+
+This migration should be applied after `supabase/migrations/03_handle_new_user_oauth.sql`.
+
+---
+
+## 5. Apply verification token migration
+
+The new `05_verification_tokens.sql` migration adds secure token storage for
+email verification and password reset flows. It enables RLS and denies direct
+anon/authenticated access so tokens can only be managed server-side.
+
+**Option A — Supabase Dashboard SQL Editor**
+
+1. Go to **SQL Editor → New query**
+2. Paste the contents of `supabase/migrations/05_verification_tokens.sql`
+3. Click **Run**
+
+**Option B — Supabase CLI**
+
+```bash
+supabase db push
+```
+
+This migration should be applied after `supabase/migrations/04_email_first_auth.sql`.
+
+---
+
+## 6. Get Your API Keys
 
 1. In your Supabase project go to **Settings → API**
 2. Copy the following values — you will need them for your `.env` files:

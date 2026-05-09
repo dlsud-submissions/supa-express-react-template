@@ -1,5 +1,5 @@
 -- =============================================================================
--- Migration: 03_user_provider.sql
+-- Migration: 05_user_provider.sql
 -- Purpose:   Track auth provider and require username completion for new
 --            Google OAuth users before they enter the app.
 --

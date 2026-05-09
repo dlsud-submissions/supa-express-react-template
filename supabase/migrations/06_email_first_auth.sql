@@ -1,4 +1,4 @@
--- Migration: 04_email_first_auth.sql
+-- Migration: 06_email_first_auth.sql
 -- Purpose:   Migrate public.users to real email auth and make username nullable.
 
 ALTER TABLE public.users

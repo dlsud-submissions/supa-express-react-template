@@ -1,4 +1,4 @@
--- Migration: 05_verification_tokens.sql
+-- Migration: 07_verification_tokens.sql
 -- Purpose:   Add verification token storage for email verification and password reset.
 
 CREATE TABLE IF NOT EXISTS public.verification_tokens (
