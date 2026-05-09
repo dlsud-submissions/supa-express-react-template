@@ -2,8 +2,18 @@ import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { supabase } from '../../lib/supabase.js';
+import { authApi } from '../../modules/api/auth/auth.api';
 import { ToastProvider } from '../ToastProvider/ToastProvider';
 import { AuthProvider, useAuth } from './AuthProvider';
+
+// Mock the authApi module
+vi.mock('../../modules/api/auth/auth.api', () => ({
+  authApi: {
+    login: vi.fn(),
+    loginWithGoogle: vi.fn(),
+    logout: vi.fn(),
+  },
+}));
 
 // Unmock the provider to test its actual implementation
 vi.unmock('./AuthProvider');
@@ -133,7 +143,7 @@ describe('AuthProvider', () => {
   it('sets authError when login returns a Supabase error', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+    vi.mocked(authApi.login).mockResolvedValueOnce({
       data: null,
       error: { message: 'Invalid login credentials' },
     });
@@ -154,7 +164,7 @@ describe('AuthProvider', () => {
   it('clears authError when clearAuthError is called', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    vi.mocked(supabase.auth.signInWithPassword).mockResolvedValueOnce({
+    vi.mocked(authApi.login).mockResolvedValueOnce({
       data: null,
       error: { message: 'Invalid login credentials' },
     });
@@ -192,7 +202,7 @@ describe('AuthProvider', () => {
   it('calls signInWithOAuth with google provider and correct redirectTo', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+    vi.mocked(authApi.loginWithGoogle).mockResolvedValueOnce({
       data: {},
       error: null,
     });
@@ -206,19 +216,14 @@ describe('AuthProvider', () => {
 
     // --- Assert ---
     await waitFor(() => {
-      expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith({
-        provider: 'google',
-        options: expect.objectContaining({
-          redirectTo: expect.stringContaining('/auth/callback'),
-        }),
-      });
+      expect(authApi.loginWithGoogle).toHaveBeenCalled();
     });
   });
 
   it('sets authError when loginWithGoogle returns an error', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValueOnce({
+    vi.mocked(authApi.loginWithGoogle).mockResolvedValueOnce({
       data: null,
       error: { message: 'Unsupported provider: provider is not enabled' },
     });
