@@ -69,4 +69,18 @@ export const userApi = {
       .select(USER_PROFILE_FIELDS)
       .single();
   },
+  /**
+   * Updates a specific user's username by UUID.
+   * - Used during signup flow where the new user id is available in location state.
+   * @param {string} userId
+   * @param {string} username
+   */
+  updateUsernameById: async (userId, username) => {
+    return supabase
+      .from('users')
+      .update({ username, username_confirmed: true })
+      .eq('id', userId)
+      .select(USER_PROFILE_FIELDS)
+      .single();
+  },
 };

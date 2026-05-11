@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import ConflictError from '../../../components/errors/ConflictError/ConflictError';
-import { supabase } from '../../../lib/supabase.js';
+import { userApi } from '../../../modules/api/user/user.api';
 import { useToast } from '../../../providers/ToastProvider/ToastProvider';
 
 const SetUsernamePage = () => {
@@ -16,14 +16,11 @@ const SetUsernamePage = () => {
     e.preventDefault();
     setError(null);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ username })
-        .eq('id', userId);
+      const { error } = await userApi.updateUsernameById(userId, username);
       if (error) {
         // Postgres unique violation code
         if (error.code === '23505' || error.details?.includes('duplicate')) {
-          setError('ConflictError');
+          setError('Username already taken');
           return;
         }
         setError(error.message || 'Update failed');
@@ -49,11 +46,7 @@ const SetUsernamePage = () => {
             onChange={(e) => setUsername(e.target.value)}
           />
         </label>
-        {error === 'ConflictError' ? (
-          <ConflictError />
-        ) : (
-          error && <div role="alert">{error}</div>
-        )}
+        {error ? <ConflictError message={error} /> : null}
         <button type="submit">Save</button>
       </form>
     </main>

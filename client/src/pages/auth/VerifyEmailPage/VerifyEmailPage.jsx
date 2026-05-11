@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { authApi } from '../../../modules/api/auth/auth.api';
 
 const VerifyEmailPage = () => {
