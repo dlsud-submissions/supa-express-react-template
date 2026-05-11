@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
   const [needsUsername, setNeedsUsername] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
 
   /**
    * Fetches the user's row from public.users to get username and role.
@@ -35,7 +36,7 @@ export const AuthProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('users')
         .select(
-          'id, username, email, role, avatar_url, provider, username_confirmed, created_at, last_login'
+          'id, username, email, role, avatar_url, provider, is_verified, username_confirmed, created_at, last_login'
         )
         .eq('id', userId)
         .single();
@@ -43,11 +44,13 @@ export const AuthProvider = ({ children }) => {
       if (error) throw error;
 
       setUser(data);
-      setNeedsUsername(resolveNeedsUsername(data));
+      setNeedsUsername(data?.username == null);
       setAuthError(null);
+      setIsVerified(Boolean(data?.is_verified));
     } catch {
       setUser(null);
       setNeedsUsername(false);
+      setIsVerified(false);
       setAuthError('Failed to load user profile.');
     } finally {
       setLoading(false);
@@ -73,6 +76,7 @@ export const AuthProvider = ({ children }) => {
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setNeedsUsername(false);
+        setIsVerified(false);
         setAuthError(null);
         setLoading(false);
       }
@@ -82,16 +86,7 @@ export const AuthProvider = ({ children }) => {
   }, [fetchProfile]);
 
   const resolveNeedsUsername = (profile) => {
-    if (!profile || profile.provider !== 'google') {
-      return false;
-    }
-
-    const username = profile.username ?? '';
-    const hasCollisionSuffix = /_[0-9]+$/.test(username);
-
-    return (
-      !username || hasCollisionSuffix || profile.username_confirmed === false
-    );
+    return profile?.username == null;
   };
 
   /**
@@ -100,9 +95,9 @@ export const AuthProvider = ({ children }) => {
    * @param {Object} credentials - { username, password }
    * @returns {Promise<{ error }>}
    */
-  const login = async ({ username, password }) => {
+  const login = async ({ email, password }) => {
     setAuthError(null);
-    const { error } = await authApi.login({ username, password });
+    const { error } = await authApi.login({ email, password });
     if (error) setAuthError(error.message);
     return { error };
   };
@@ -166,6 +161,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         authError,
         needsUsername,
+        isVerified,
         login,
         loginWithGoogle,
         logout,
@@ -180,7 +176,7 @@ export const AuthProvider = ({ children }) => {
 
 /**
  * Custom hook to access authentication context.
- * @returns {{ user, loading, authError, login, loginWithGoogle, logout, clearAuthError }}
+ * @returns {{ user, loading, authError, needsUsername, isVerified, login, loginWithGoogle, logout, clearAuthError }}
  */
 export const useAuth = () => {
   const context = useContext(AuthContext);
