@@ -13,27 +13,59 @@ export const authApi = {
    * @param {Object} userData - Contains username and password.
    * @returns {Promise<{ data, error }>}
    */
-  signup: async ({ username, password }) => {
+  signup: async ({ email, password }) => {
     return supabase.auth.signUp({
-      email: `${username}@app.local`,
+      email,
       password,
-      options: {
-        data: { username },
-      },
     });
   },
 
   /**
    * Authenticates a user via Supabase Auth.
-   * - Email is derived from username using the app.local convention.
-   * @param {Object} credentials - Contains username and password.
+   * @param {Object} credentials - Contains email and password.
    * @returns {Promise<{ data, error }>}
    */
-  login: async ({ username, password }) => {
+  login: async ({ email, password }) => {
     return supabase.auth.signInWithPassword({
-      email: `${username}@app.local`,
+      email,
       password,
     });
+  },
+
+  /**
+   * Sends an OTP via the server-side OTP API.
+   * @param {string} userId
+   * @param {string} email
+   * @param {string} purpose
+   */
+  sendOtp: async (userId, email, purpose) => {
+    const response = await fetch('/api/otp/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, email, purpose }),
+    });
+
+    return response.json();
+  },
+
+  /**
+   * Verifies an OTP via the server-side OTP API.
+   * @param {string} userId
+   * @param {string} token
+   * @param {string} purpose
+   */
+  verifyOtp: async (userId, token, purpose) => {
+    const response = await fetch('/api/otp/verify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, token, purpose }),
+    });
+
+    return response.json();
   },
 
   /**
