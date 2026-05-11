@@ -9,7 +9,7 @@ import { useAuth } from '../../providers/AuthProvider/AuthProvider';
  * @returns {JSX.Element}
  */
 const AuthRoute = () => {
-  const { user, loading, needsUsername } = useAuth();
+  const { user, loading, needsUsername, isVerified } = useAuth();
   const location = useLocation();
 
   if (loading) return null;
@@ -29,8 +29,25 @@ const AuthRoute = () => {
   }
 
   // Redirect Google users with a collision username to complete-profile
-  if (needsUsername && location.pathname !== '/complete-profile') {
-    return <Navigate to="/complete-profile" replace />;
+  if (
+    needsUsername &&
+    location.pathname !== '/complete-profile' &&
+    location.pathname !== '/setup-username'
+  ) {
+    return (
+      <Navigate to="/setup-username" state={{ userId: user?.id }} replace />
+    );
+  }
+
+  // Redirect unverified users to email verification
+  if (!isVerified && location.pathname !== '/verify-email') {
+    return (
+      <Navigate
+        to="/verify-email"
+        state={{ userId: user?.id, email: user?.email }}
+        replace
+      />
+    );
   }
 
   // Render children (protected content)
