@@ -12,6 +12,8 @@ vi.mock('../../modules/api/auth/auth.api', () => ({
     login: vi.fn(),
     loginWithGoogle: vi.fn(),
     logout: vi.fn(),
+    sendOtp: vi.fn(),
+    verifyOtp: vi.fn(),
   },
 }));
 
@@ -22,13 +24,25 @@ vi.unmock('./AuthProvider');
  * Test consumer that exposes auth context values for assertions.
  */
 const TestConsumer = () => {
-  const { user, authError, clearAuthError, login, logout, loginWithGoogle } =
-    useAuth();
+  const {
+    user,
+    authError,
+    needsUsername,
+    isVerified,
+    clearAuthError,
+    login,
+    logout,
+    loginWithGoogle,
+  } = useAuth();
   return (
     <div>
       <span data-testid="user">{user ? user.username : 'Guest'}</span>
+      <span data-testid="verified">{String(isVerified)}</span>
+      <span data-testid="needsUsername">{String(needsUsername)}</span>
       <span data-testid="error">{authError || 'No Error'}</span>
-      <button onClick={() => login({ username: 'alice', password: 'pw' })}>
+      <button
+        onClick={() => login({ email: 'alice@example.com', password: 'pw' })}
+      >
         Login
       </button>
       <button onClick={loginWithGoogle}>Login with Google</button>
@@ -88,7 +102,12 @@ describe('AuthProvider', () => {
 
     // Mock the public.users profile fetch that happens after SIGNED_IN
     supabase._queryChain.single.mockResolvedValueOnce({
-      data: { id: 'uuid-1', username: 'alice', role: 'USER' },
+      data: {
+        id: 'uuid-1',
+        username: 'alice',
+        role: 'USER',
+        is_verified: true,
+      },
       error: null,
     });
 
@@ -105,6 +124,8 @@ describe('AuthProvider', () => {
     // --- Assert ---
     await waitFor(() => {
       expect(screen.getByTestId('user')).toHaveTextContent('alice');
+      expect(screen.getByTestId('verified')).toHaveTextContent('true');
+      expect(screen.getByTestId('needsUsername')).toHaveTextContent('false');
     });
     expect(screen.getByTestId('error')).toHaveTextContent('No Error');
   });

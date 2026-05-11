@@ -17,32 +17,36 @@ vi.mock('../../../lib/supabase.js', () => ({
 describe('authApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn();
   });
 
   describe('signup', () => {
-    it('calls signUp with derived email and username metadata', async () => {
-      const userData = { username: 'testuser', password: 'securePassword' };
+    it('calls signUp with the provided email', async () => {
+      const userData = {
+        email: 'test@example.com',
+        password: 'securePassword',
+      };
 
       await authApi.signup(userData);
 
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'testuser@app.local',
+        email: 'test@example.com',
         password: 'securePassword',
-        options: {
-          data: { username: 'testuser' },
-        },
       });
     });
   });
 
   describe('login', () => {
-    it('calls signInWithPassword with derived email', async () => {
-      const credentials = { username: 'testuser', password: 'securePassword' };
+    it('calls signInWithPassword with the provided email', async () => {
+      const credentials = {
+        email: 'test@example.com',
+        password: 'securePassword',
+      };
 
       await authApi.login(credentials);
 
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'testuser@app.local',
+        email: 'test@example.com',
         password: 'securePassword',
       });
     });
@@ -52,6 +56,62 @@ describe('authApi', () => {
     it('calls signOut to clear the local session', async () => {
       await authApi.logout();
       expect(supabase.auth.signOut).toHaveBeenCalled();
+    });
+  });
+
+  describe('sendOtp', () => {
+    it('posts OTP send payload to the server API', async () => {
+      const mockedResponse = { success: true };
+      global.fetch.mockResolvedValueOnce({
+        json: vi.fn().mockResolvedValueOnce(mockedResponse),
+      });
+
+      const response = await authApi.sendOtp(
+        '11111111-1111-1111-1111-111111111111',
+        'test@example.com',
+        'email_verification'
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/otp/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: '11111111-1111-1111-1111-111111111111',
+          email: 'test@example.com',
+          purpose: 'email_verification',
+        }),
+      });
+      expect(response).toEqual(mockedResponse);
+    });
+  });
+
+  describe('verifyOtp', () => {
+    it('posts OTP verification payload to the server API', async () => {
+      const mockedResponse = { valid: true };
+      global.fetch.mockResolvedValueOnce({
+        json: vi.fn().mockResolvedValueOnce(mockedResponse),
+      });
+
+      const response = await authApi.verifyOtp(
+        '11111111-1111-1111-1111-111111111111',
+        '123456',
+        'email_verification'
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith('/api/otp/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: '11111111-1111-1111-1111-111111111111',
+          token: '123456',
+          purpose: 'email_verification',
+        }),
+      });
+      expect(response).toEqual(mockedResponse);
     });
   });
 
