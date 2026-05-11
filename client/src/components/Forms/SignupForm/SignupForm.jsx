@@ -20,7 +20,7 @@ const SignupForm = () => {
   const { loginWithGoogle } = useAuth();
   const { showToast } = useToast();
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: '',
     confirmPassword: '',
   });
@@ -113,12 +113,12 @@ const SignupForm = () => {
 
       <form onSubmit={handleSubmit} className={styles.form} noValidate>
         <div className={styles.inputGroup}>
-          <label htmlFor="username">Username</label>
+          <label htmlFor="email">Email</label>
           <input
-            type="text"
-            id="username"
-            name="username"
-            value={formData.username}
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             required
           />
@@ -148,19 +148,24 @@ const SignupForm = () => {
           />
         </div>
 
-        <button
-          type="submit"
-          className={styles.submitBtn}
-          disabled={isSubmitting || isGoogleLoading}
-        >
-          {isSubmitting ? 'Registering...' : 'Register'}
-        </button>
-      </form>
+      try {
+        const { data, error } = await authApi.signup({
+          email: formData.email,
+          password: formData.password,
+        });
 
-      <div className={styles.divider}>
-        <span className={styles.dividerText}>or</span>
-      </div>
+        if (error) {
+          setErrorData({
+            message: error.message || 'Signup failed',
+            errors: [],
+          });
+          return;
+        }
 
+        const userId = data?.user?.id ?? data?.id;
+        await authApi.sendOtp(userId, formData.email, 'email_verification');
+        navigate('/verify-email', { state: { userId, email: formData.email } });
+      } catch (err) {
       <GoogleAuthButton
         onClick={handleGoogleSignup}
         isLoading={isGoogleLoading}
