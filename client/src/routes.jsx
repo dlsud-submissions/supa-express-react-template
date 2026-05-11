@@ -1,12 +1,14 @@
 import { createBrowserRouter } from 'react-router';
 import LoginForm from './components/forms/LoginForm/LoginForm';
-import SignupForm from './components/forms/SignupForm/SignupForm';
 import MainLayout from './layouts/MainLayout/MainLayout';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
 import App from './pages/App/App';
 import CompleteProfile from './pages/auth/CompleteProfile/CompleteProfile';
 import OAuthCallback from './pages/auth/OAuthCallback/OAuthCallback';
+import SetUsernamePage from './pages/auth/SetUsernamePage/SetUsernamePage';
+import SignupPage from './pages/auth/SignupPage/SignupPage';
+import VerifyEmailPage from './pages/auth/VerifyEmailPage/VerifyEmailPage';
 import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
 import ForbiddenError from './pages/errors/ForbiddenError/ForbiddenError';
 import InternalServerError from './pages/errors/InternalServerError/InternalServerError';
@@ -49,7 +51,15 @@ const routes = createBrowserRouter([
       },
       {
         path: 'sign-up',
-        element: <SignupForm />,
+        element: <SignupPage />,
+      },
+      {
+        path: 'verify-email',
+        element: <VerifyEmailPage />,
+      },
+      {
+        path: 'setup-username',
+        element: <SetUsernamePage />,
       },
       {
         path: 'log-in',
