@@ -1,8 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
+  loginSchema,
   signupSchema,
-  usernameSchema,
   usernameFieldSchema,
+  usernameSchema,
 } from './auth.validator';
 
 /**
@@ -10,24 +11,30 @@ import {
  * - Validates that Zod correctly identifies malformed input.
  */
 describe('Auth Client Validators', () => {
-  it('should invalidate a username with special characters', () => {
-    // --- Arrange ---
-    // Define input with invalid characters in username
+  it('should invalidate an improperly formatted email in signup', () => {
     const invalidData = {
-      username: 'user@name',
+      email: 'not-an-email',
       password: 'Password1',
       confirmPassword: 'Password1',
     };
 
-    // --- Act ---
-    // Run validation against the signup schema
     const result = signupSchema.safeParse(invalidData);
 
-    // --- Assert ---
-    // Ensure validation failed and returned correct error message
     expect(result.success).toBe(false);
     expect(result.error.issues[0].message).toContain(
-      'Only letters, numbers, and underscores'
+      'Must be a valid email address'
+    );
+  });
+
+  it('should invalidate an improperly formatted email in login', () => {
+    const result = loginSchema.safeParse({
+      email: 'not-an-email',
+      password: 'Password1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].message).toBe(
+      'Please enter a valid email address.'
     );
   });
 
@@ -35,7 +42,7 @@ describe('Auth Client Validators', () => {
     // --- Arrange ---
     // Define input with non-matching password fields
     const mismatchData = {
-      username: 'validUser',
+      email: 'valid@example.com',
       password: 'Password1',
       confirmPassword: 'WrongPassword1',
     };

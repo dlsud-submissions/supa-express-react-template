@@ -42,17 +42,17 @@ describe('LoginForm', () => {
     });
   });
 
-  it('updates username input value on change', async () => {
+  it('updates email input value on change', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
     render(<LoginForm />);
 
     // --- Act ---
-    const usernameInput = screen.getByLabelText(/username/i);
-    await user.type(usernameInput, 'alice');
+    const emailInput = screen.getByLabelText(/email/i);
+    await user.type(emailInput, 'alice@example.com');
 
     // --- Assert ---
-    expect(usernameInput).toHaveValue('alice');
+    expect(emailInput).toHaveValue('alice@example.com');
   });
 
   it('shows validation error when fields are empty on submit', async () => {
@@ -68,7 +68,7 @@ describe('LoginForm', () => {
     expect(mockLogin).not.toHaveBeenCalled();
   });
 
-  it('calls AuthProvider.login() with username and password', async () => {
+  it('calls AuthProvider.login() with email and password', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
     mockLogin.mockResolvedValueOnce({ error: null });
@@ -80,14 +80,14 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     // --- Act ---
-    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/email/i), 'alice@example.com');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
     // --- Assert ---
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
-        username: 'alice',
+        email: 'alice@example.com',
         password: 'Password1',
       });
     });
@@ -102,7 +102,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     // --- Act ---
-    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/email/i), 'alice@example.com');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 
@@ -114,6 +114,23 @@ describe('LoginForm', () => {
     });
   });
 
+  it('shows validation error for an invalid email before login', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    // --- Act ---
+    await user.type(screen.getByLabelText(/email/i), 'alice');
+    await user.type(screen.getByLabelText(/password/i), 'Password1');
+    await user.click(screen.getByRole('button', { name: /enter/i }));
+
+    // --- Assert ---
+    expect(mockLogin).not.toHaveBeenCalled();
+    expect(
+      await screen.findByText(/please enter a valid email address/i)
+    ).toBeInTheDocument();
+  });
+
   it('disables the submit button while submitting', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
@@ -122,7 +139,7 @@ describe('LoginForm', () => {
     render(<LoginForm />);
 
     // --- Act ---
-    await user.type(screen.getByLabelText(/username/i), 'alice');
+    await user.type(screen.getByLabelText(/email/i), 'alice@example.com');
     await user.type(screen.getByLabelText(/password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /enter/i }));
 

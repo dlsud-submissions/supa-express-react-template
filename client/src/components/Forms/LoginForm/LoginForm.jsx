@@ -22,7 +22,7 @@ const LoginForm = () => {
   const { login, loginWithGoogle, user } = useAuth();
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [errorData, setErrorData] = useState({
     message: '',
     errors: [],
@@ -104,7 +104,7 @@ const LoginForm = () => {
       // Provider not enabled or other config error — surface it clearly
       showToast(
         error.message?.includes('provider is not enabled')
-          ? 'Google sign-in is not configured yet. Please use username and password.'
+          ? 'Google sign-in is not configured yet. Please use email and password.'
           : `Google sign-in failed: ${error.message}`,
         'error'
       );
@@ -129,12 +129,12 @@ const LoginForm = () => {
 
       <form onSubmit={handleSubmit} className={styles.form} noValidate>
         <div className={styles.inputGroup}>
-          <label htmlFor="username">Username</label>
+          <label htmlFor="email">Email</label>
           <input
-            type="text"
-            id="username"
-            name="username"
-            value={formData.username}
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             required
           />
