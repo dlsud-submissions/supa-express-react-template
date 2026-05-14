@@ -89,6 +89,28 @@ describe('Navbar Component', () => {
     expect(screen.getByAltText('john_doe avatar')).toBeInTheDocument();
   });
 
+  it('links settings navigation to profile settings', () => {
+    // --- Arrange ---
+    vi.mocked(useAuth).mockReturnValue({
+      user: { username: 'john_doe', role: 'USER' },
+      logout: vi.fn(),
+    });
+    vi.mocked(useToast).mockReturnValue({ showToast: vi.fn() });
+    vi.mocked(useTheme).mockReturnValue({
+      theme: 'light',
+      toggleTheme: vi.fn(),
+    });
+
+    // --- Act ---
+    render(<Navbar />);
+
+    // --- Assert ---
+    expect(screen.getByTitle('Account Settings')).toHaveAttribute(
+      'href',
+      '/settings/profile'
+    );
+  });
+
   it('calls logout and shows toast when confirmed', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
