@@ -1,6 +1,7 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter, Navigate } from 'react-router';
 import LoginForm from './components/forms/LoginForm/LoginForm';
 import MainLayout from './layouts/MainLayout/MainLayout';
+import SettingsLayout from './layouts/SettingsLayout/SettingsLayout';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
 import App from './pages/App/App';
@@ -16,6 +17,7 @@ import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
 import LandingPage from './pages/LandingPage/LandingPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import SearchPage from './pages/SearchPage/SearchPage';
+import ProfileSettings from './pages/settings/ProfileSettings/ProfileSettings';
 import UserDashboard from './pages/user/UserDashboard/UserDashboard';
 import { AuthProvider } from './providers/AuthProvider/AuthProvider';
 import { ThemeProvider } from './providers/ThemeProvider/ThemeProvider';
@@ -97,6 +99,24 @@ const routes = createBrowserRouter([
               {
                 path: 'profile/:id',
                 element: <ProfilePage />,
+              },
+              {
+                path: 'settings',
+                element: <SettingsLayout />,
+                children: [
+                  {
+                    index: true,
+                    element: <Navigate to="/settings/profile" replace />,
+                  },
+                  {
+                    path: 'profile',
+                    element: <ProfileSettings />,
+                  },
+                  {
+                    path: 'account',
+                    element: <div>Account settings coming soon.</div>,
+                  },
+                ],
               },
 
               // Tier 2: Administrative Role Protection

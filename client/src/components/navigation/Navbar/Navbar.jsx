@@ -68,7 +68,7 @@ const Navbar = () => {
           )}
 
           <Link
-            to="/settings"
+            to="/settings/profile"
             className={styles.navItem}
             title="Account Settings"
           >
