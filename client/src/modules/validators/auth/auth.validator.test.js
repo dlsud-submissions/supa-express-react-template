@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   loginSchema,
+  profileSettingsSchema,
   signupSchema,
   usernameFieldSchema,
   usernameSchema,
@@ -69,6 +70,27 @@ describe('Auth Client Validators', () => {
     expect(result.success).toBe(false);
     expect(result.error.issues[0].message).toContain(
       'Only letters, numbers, and underscores'
+    );
+  });
+
+  it('should validate profile settings with an optional avatar URL', () => {
+    const result = profileSettingsSchema.safeParse({
+      username: 'fresh_name',
+      avatar_url: '',
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('should invalidate malformed avatar URLs in profile settings', () => {
+    const result = profileSettingsSchema.safeParse({
+      username: 'fresh_name',
+      avatar_url: 'not-a-url',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error.issues[0].message).toBe(
+      'Avatar URL must be a valid URL.'
     );
   });
 });

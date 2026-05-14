@@ -23,6 +23,14 @@ export const usernameFieldSchema = z
 
 export const usernameSchema = z.object({ username: usernameFieldSchema });
 
+export const profileSettingsSchema = z.object({
+  username: usernameFieldSchema,
+  avatar_url: z
+    .string()
+    .url('Avatar URL must be a valid URL.')
+    .or(z.literal('')),
+});
+
 export const signupSchema = z
   .object({
     email: emailSchema,
