@@ -69,6 +69,30 @@ export const userApi = {
       .select(USER_PROFILE_FIELDS)
       .single();
   },
+
+  /**
+   * Updates profile settings for the currently authenticated user.
+   * - Requires an authenticated session and self-update RLS policy.
+   * @param {{ username: string, avatar_url: string|null }} profile
+   * @returns {Promise<{ data: Object|null, error: Object|null }>}
+   */
+  updateProfile: async ({ username, avatar_url }) => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return { data: null, error: { message: 'No active session' } };
+    }
+
+    return supabase
+      .from('users')
+      .update({ username, avatar_url })
+      .eq('id', session.user.id)
+      .select(USER_PROFILE_FIELDS)
+      .single();
+  },
+
   /**
    * Updates a specific user's username by UUID.
    * - Used during signup flow where the new user id is available in location state.

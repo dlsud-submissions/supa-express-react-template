@@ -123,4 +123,42 @@ describe('userApi', () => {
       expect(supabase._chain.eq).toHaveBeenCalledWith('id', 'user-uuid-123');
     });
   });
+
+  describe('updateProfile()', () => {
+    it('returns error when there is no active session', async () => {
+      supabase.auth.getSession.mockResolvedValue({ data: { session: null } });
+
+      const result = await userApi.updateProfile({
+        username: 'fresh_name',
+        avatar_url: null,
+      });
+
+      expect(result.data).toBeNull();
+      expect(result.error.message).toMatch(/no active session/i);
+    });
+
+    it('updates the current user profile fields', async () => {
+      const mockSession = { user: { id: 'user-uuid-123' } };
+      const profile = {
+        username: 'fresh_name',
+        avatar_url: 'https://example.com/avatar.png',
+      };
+      supabase.auth.getSession.mockResolvedValue({
+        data: { session: mockSession },
+      });
+      supabase._chain.single.mockResolvedValue({
+        data: {
+          id: 'user-uuid-123',
+          ...profile,
+        },
+        error: null,
+      });
+
+      await userApi.updateProfile(profile);
+
+      expect(supabase.from).toHaveBeenCalledWith('users');
+      expect(supabase._chain.update).toHaveBeenCalledWith(profile);
+      expect(supabase._chain.eq).toHaveBeenCalledWith('id', 'user-uuid-123');
+    });
+  });
 });
