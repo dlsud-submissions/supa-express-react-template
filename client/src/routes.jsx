@@ -17,6 +17,7 @@ import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
 import LandingPage from './pages/LandingPage/LandingPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import SearchPage from './pages/SearchPage/SearchPage';
+import AccountSettings from './pages/settings/AccountSettings/AccountSettings';
 import ProfileSettings from './pages/settings/ProfileSettings/ProfileSettings';
 import UserDashboard from './pages/user/UserDashboard/UserDashboard';
 import { AuthProvider } from './providers/AuthProvider/AuthProvider';
@@ -114,7 +115,7 @@ const routes = createBrowserRouter([
                   },
                   {
                     path: 'account',
-                    element: <div>Account settings coming soon.</div>,
+                    element: <AccountSettings />,
                   },
                 ],
               },
