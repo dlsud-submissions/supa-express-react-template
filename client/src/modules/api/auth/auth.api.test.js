@@ -10,6 +10,7 @@ vi.mock('../../../lib/supabase.js', () => ({
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       getSession: vi.fn(),
+      updateUser: vi.fn(),
     },
   },
 }));
@@ -119,6 +120,16 @@ describe('authApi', () => {
     it('calls getSession to retrieve existing session data', async () => {
       await authApi.checkStatus();
       expect(supabase.auth.getSession).toHaveBeenCalled();
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('calls updateUser with the new password', async () => {
+      await authApi.updatePassword('NewP@ssw0rd');
+
+      expect(supabase.auth.updateUser).toHaveBeenCalledWith({
+        password: 'NewP@ssw0rd',
+      });
     });
   });
 });
