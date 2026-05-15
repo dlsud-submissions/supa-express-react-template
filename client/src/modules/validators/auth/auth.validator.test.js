@@ -1,11 +1,53 @@
 import { describe, expect, it } from 'vitest';
 import {
   loginSchema,
+  passwordChangeSchema,
+  passwordSchema,
   profileSettingsSchema,
   signupSchema,
   usernameFieldSchema,
   usernameSchema,
 } from './auth.validator';
+
+describe('auth.validator passwordChangeSchema', () => {
+  it('accepts a valid password and matching confirmation', () => {
+    const payload = {
+      newPassword: 'GoodPass1',
+      confirmPassword: 'GoodPass1',
+    };
+
+    const result = passwordChangeSchema.safeParse(payload);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects when passwords don't match", () => {
+    const payload = {
+      newPassword: 'GoodPass1',
+      confirmPassword: 'Different1',
+    };
+
+    const result = passwordChangeSchema.safeParse(payload);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const messages = result.error.issues.map((i) => i.message);
+      expect(messages).toContain("Passwords don't match");
+    }
+  });
+
+  it('enforces complexity rules from passwordSchema', () => {
+    // missing uppercase
+    let res = passwordSchema.safeParse('lowercase1');
+    expect(res.success).toBe(false);
+
+    // missing number
+    res = passwordSchema.safeParse('NoNumber');
+    expect(res.success).toBe(false);
+
+    // too short
+    res = passwordSchema.safeParse('Aa1');
+    expect(res.success).toBe(false);
+  });
+});
 
 /**
  * Unit tests for client-side auth validation schemas.
