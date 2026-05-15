@@ -69,6 +69,16 @@ export const authApi = {
   },
 
   /**
+   * Updates the currently authenticated user's password.
+   * Supabase requires an active session for this operation.
+   * @param {string} newPassword
+   * @returns {Promise<{ data, error }>}
+   */
+  updatePassword: async (newPassword) => {
+    return supabase.auth.updateUser({ password: newPassword });
+  },
+
+  /**
    * Initiates Google OAuth sign-in via Supabase Auth.
    * - Redirects the browser to Google's consent screen.
    * - On return, Supabase exchanges the code and fires onAuthStateChange.
