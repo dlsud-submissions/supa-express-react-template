@@ -88,6 +88,9 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
           </div>
         </td>
         <td className={styles.cell}>
+          <span className={styles.email}>{targetUser.email || '—'}</span>
+        </td>
+        <td className={styles.cell}>
           <span className={styles.roleBadge}>{targetUser.role}</span>
         </td>
         <td className={styles.cell}>
