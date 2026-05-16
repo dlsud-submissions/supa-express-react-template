@@ -55,7 +55,9 @@ export const searchApi = {
 
     let query = supabase
       .from('users')
-      .select('id, username, email, role, provider, created_at, last_login')
+      .select(
+        'id, username, email, is_verified, role, provider, created_at, last_login'
+      )
       .order(safeSortBy, { ascending });
 
     // Partial username match — ilike is case-insensitive

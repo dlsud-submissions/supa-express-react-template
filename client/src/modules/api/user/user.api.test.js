@@ -59,6 +59,9 @@ describe('userApi', () => {
       await userApi.getProfile();
 
       expect(supabase.from).toHaveBeenCalledWith('users');
+      expect(supabase._chain.select).toHaveBeenCalledWith(
+        'id, username, email, is_verified, role, avatar_url, provider, username_confirmed, created_at, last_login'
+      );
       expect(supabase._chain.eq).toHaveBeenCalledWith('id', 'user-uuid-123');
     });
   });

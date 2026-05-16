@@ -45,7 +45,7 @@ describe('adminApi', () => {
 
       expect(supabase.from).toHaveBeenCalledWith('users');
       expect(supabase._chain.select).toHaveBeenCalledWith(
-        'id, username, email, role, provider, avatar_url, created_at, last_login'
+        'id, username, email, is_verified, role, provider, avatar_url, created_at, last_login'
       );
       expect(supabase._chain.order).toHaveBeenCalledWith('created_at', {
         ascending: true,

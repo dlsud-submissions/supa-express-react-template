@@ -38,6 +38,7 @@ describe('ProfilePage Component', () => {
     id: 'admin-uuid-1',
     username: 'admin_boss',
     role: 'ADMIN',
+    is_verified: true,
     provider: 'email',
     avatar_url: null,
     created_at: '2024-01-01T00:00:00Z',
@@ -48,6 +49,7 @@ describe('ProfilePage Component', () => {
     id: 'user-uuid-123',
     username: 'test_subject',
     role: 'USER',
+    is_verified: false,
     provider: 'google',
     avatar_url: null,
     created_at: '2024-03-15T00:00:00Z',
@@ -78,6 +80,7 @@ describe('ProfilePage Component', () => {
     await waitFor(() => {
       expect(screen.getByText('admin_boss')).toBeInTheDocument();
       expect(screen.getByText('ADMIN')).toBeInTheDocument();
+      expect(screen.getByText('Verified')).toBeInTheDocument();
     });
     expect(userApi.getProfile).toHaveBeenCalled();
     expect(userApi.getById).not.toHaveBeenCalled();
@@ -171,6 +174,7 @@ describe('ProfilePage Component', () => {
     await waitFor(() => {
       expect(screen.getByText('test_subject')).toBeInTheDocument();
       expect(screen.getByText('USER')).toBeInTheDocument();
+      expect(screen.getByText('Unverified')).toBeInTheDocument();
     });
     expect(userApi.getById).toHaveBeenCalledWith('user-uuid-123');
   });

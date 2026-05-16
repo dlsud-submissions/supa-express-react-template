@@ -67,7 +67,16 @@ const ProfilePage = () => {
             <span className={styles.email}>{profileUser.email}</span>
           ) : null}
           <div className={styles.badgeGroup}>
-            <span className={styles.roleBadge}>{profileUser.role}</span>
+            <div className={styles.roleStatusGroup}>
+              <span className={styles.roleBadge}>{profileUser.role}</span>
+              <span
+                className={`${styles.verificationBadge} ${
+                  profileUser.is_verified ? styles.verified : styles.unverified
+                }`}
+              >
+                {profileUser.is_verified ? 'Verified' : 'Unverified'}
+              </span>
+            </div>
             <span
               className={`${styles.providerBadge} ${styles[`provider-${profileUser.provider}`]}`}
             >

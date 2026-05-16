@@ -1,7 +1,7 @@
 import { supabase } from '../../../lib/supabase.js';
 
 const USER_SELECT_COLUMNS =
-  'id, username, email, role, provider, avatar_url, created_at, last_login';
+  'id, username, email, is_verified, role, provider, avatar_url, created_at, last_login';
 
 /**
  * Service for administrative queries via Supabase.

@@ -34,6 +34,9 @@ describe('searchApi', () => {
     await searchApi.search();
 
     expect(supabase.from).toHaveBeenCalledWith('users');
+    expect(supabase._chain.select).toHaveBeenCalledWith(
+      'id, username, email, is_verified, role, provider, created_at, last_login'
+    );
     expect(supabase._chain.order).toHaveBeenCalledWith('created_at', {
       ascending: false,
     });

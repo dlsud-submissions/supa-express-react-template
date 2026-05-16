@@ -35,6 +35,7 @@ describe('UserManagementPage Component', () => {
       id: 'uuid-1',
       username: 'alice',
       email: 'alice@example.com',
+      is_verified: true,
       provider: 'email',
       role: 'USER',
       created_at: '2024-01-01T00:00:00Z',
@@ -43,6 +44,7 @@ describe('UserManagementPage Component', () => {
       id: 'uuid-2',
       username: 'bob',
       email: 'bob@example.com',
+      is_verified: false,
       provider: 'google',
       role: 'ADMIN',
       created_at: '2024-02-01T00:00:00Z',
@@ -84,8 +86,10 @@ describe('UserManagementPage Component', () => {
       expect(screen.getByText(/total users: 2/i)).toBeInTheDocument();
       expect(screen.getByText('alice')).toBeInTheDocument();
       expect(screen.getByText('alice@example.com')).toBeInTheDocument();
+      expect(screen.getAllByText('Verified')).toHaveLength(2);
       expect(screen.getByText('bob')).toBeInTheDocument();
       expect(screen.getByText('bob@example.com')).toBeInTheDocument();
+      expect(screen.getByText('Unverified')).toBeInTheDocument();
     });
   });
 
