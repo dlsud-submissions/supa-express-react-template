@@ -2,7 +2,7 @@ import styles from './SearchFilterPanel.module.css';
 
 /**
  * Popover panel for applying section-specific filters.
- * - Renders each filter based on its type ('select' | 'date').
+ * - Renders each filter based on its type ('select' | 'text' | 'date').
  * - Calls onChange with the full updated filters object on any change.
  * @param {Object} props
  * @param {Array} props.filters - Filter definitions from sectionConfig.
@@ -56,6 +56,16 @@ const SearchFilterPanel = ({ filters, activeFilters, onChange, onClose }) => {
               <input
                 id={`filter-${filter.key}`}
                 type="date"
+                className={styles.input}
+                value={activeFilters[filter.key] || ''}
+                onChange={(e) => handleChange(filter.key, e.target.value)}
+              />
+            )}
+
+            {filter.type === 'text' && (
+              <input
+                id={`filter-${filter.key}`}
+                type="text"
                 className={styles.input}
                 value={activeFilters[filter.key] || ''}
                 onChange={(e) => handleChange(filter.key, e.target.value)}
