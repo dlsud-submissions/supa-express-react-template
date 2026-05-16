@@ -41,6 +41,11 @@
   color: var(--text-color);
 }
 
+.email {
+  color: var(--text-color);
+  font-size: var(--text-sm);
+}
+
 .roleBadge {
   display: inline-block;
   padding: var(--space-0-5) var(--space-1);
