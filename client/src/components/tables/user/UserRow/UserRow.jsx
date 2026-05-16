@@ -91,6 +91,15 @@ const UserRow = ({ user: targetUser, onUpdate }) => {
           <span className={styles.email}>{targetUser.email || '—'}</span>
         </td>
         <td className={styles.cell}>
+          <span
+            className={`${styles.verificationBadge} ${
+              targetUser.is_verified ? styles.verified : styles.unverified
+            }`}
+          >
+            {targetUser.is_verified ? 'Verified' : 'Unverified'}
+          </span>
+        </td>
+        <td className={styles.cell}>
           <span className={styles.roleBadge}>{targetUser.role}</span>
         </td>
         <td className={styles.cell}>
