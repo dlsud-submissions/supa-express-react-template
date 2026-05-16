@@ -28,6 +28,7 @@ describe('UserRow Component', () => {
     id: 'uuid-123',
     username: 'jdoe',
     email: 'jdoe@example.com',
+    is_verified: true,
     role: 'USER',
     provider: 'email',
     avatar_url: null,
@@ -54,6 +55,7 @@ describe('UserRow Component', () => {
     // --- Assert ---
     expect(screen.getByText('jdoe')).toBeInTheDocument();
     expect(screen.getByText('jdoe@example.com')).toBeInTheDocument();
+    expect(screen.getByText('Verified')).toBeInTheDocument();
     expect(screen.getByText('USER')).toBeInTheDocument();
     // created_at date rendered as locale string
     expect(
@@ -76,6 +78,26 @@ describe('UserRow Component', () => {
 
     // --- Assert ---
     expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('renders an unverified badge when the user is not verified', () => {
+    // --- Arrange ---
+    vi.mocked(useAuth).mockReturnValue({ user: { role: 'ADMIN' } });
+
+    // --- Act ---
+    render(
+      <table>
+        <tbody>
+          <UserRow
+            user={{ ...mockUser, is_verified: false }}
+            onUpdate={vi.fn()}
+          />
+        </tbody>
+      </table>
+    );
+
+    // --- Assert ---
+    expect(screen.getByText('Unverified')).toBeInTheDocument();
   });
 
   it('renders a user avatar image when avatar_url is present', () => {
