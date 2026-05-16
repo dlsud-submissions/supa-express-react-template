@@ -1,5 +1,8 @@
 import { supabase } from '../../../lib/supabase.js';
 
+const USER_SELECT_COLUMNS =
+  'id, username, email, role, provider, avatar_url, created_at, last_login';
+
 /**
  * Service for administrative queries via Supabase.
  * - Replaces fetch-based Express /api/admin/* endpoints.
@@ -15,9 +18,7 @@ export const adminApi = {
   getAllUsers: async () => {
     return supabase
       .from('users')
-      .select(
-        'id, username, email, role, provider, avatar_url, created_at, last_login'
-      )
+      .select(USER_SELECT_COLUMNS)
       .order('created_at', { ascending: true });
   },
 

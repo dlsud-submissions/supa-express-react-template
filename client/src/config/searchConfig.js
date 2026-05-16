@@ -5,6 +5,7 @@
  *
  * Filter types:
  *   'select' — renders a <select> dropdown with predefined options
+ *   'text'   — renders a text <input>
  *   'date'   — renders a date <input>
  *
  * @type {Record<string, {
@@ -18,9 +19,14 @@
 export const sectionConfig = {
   users: {
     label: 'Users',
-    columns: ['User', 'Role', 'Provider', 'Joined', 'Actions'],
+    columns: ['User', 'Email', 'Role', 'Provider', 'Joined', 'Actions'],
     emptyMessage: 'No users matched your search.',
     filters: [
+      {
+        key: 'email',
+        label: 'Email',
+        type: 'text',
+      },
       {
         key: 'role',
         label: 'Role',
@@ -40,6 +46,7 @@ export const sectionConfig = {
     ],
     sorts: [
       { key: 'username', label: 'Username' },
+      { key: 'email', label: 'Email' },
       { key: 'createdAt', label: 'Date Joined' },
       { key: 'lastLogin', label: 'Last Login' },
     ],

@@ -71,7 +71,14 @@ const UserManagementPage = () => {
           <div className={styles.listArea}>
             <TableContainer
               data={users}
-              columns={['User', 'Role', 'Joined', 'Actions']}
+              columns={[
+                'User',
+                'Email',
+                'Role',
+                'Provider',
+                'Joined',
+                'Actions',
+              ]}
               renderRow={(user) => (
                 <UserRow key={user.id} user={user} onUpdate={fetchUsers} />
               )}

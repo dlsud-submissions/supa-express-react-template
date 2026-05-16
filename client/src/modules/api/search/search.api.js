@@ -1,12 +1,18 @@
 import { supabase } from '../../../lib/supabase.js';
 
 // Whitelist of valid sort columns — prevents injection via sort params
-const VALID_SORT_FIELDS = ['username', 'created_at', 'last_login', 'role'];
+const VALID_SORT_FIELDS = [
+  'username',
+  'email',
+  'created_at',
+  'last_login',
+  'role',
+];
 
 /**
  * Service for search queries via Supabase.
  * - Replaces fetch-based Express /api/search endpoint.
- * - Supports partial username match, role filter, date range, and sort.
+ * - Supports partial username/email match, role filter, date range, and sort.
  * - Return shape is { data, error } from Supabase — callers handle both.
  */
 export const searchApi = {
@@ -15,6 +21,7 @@ export const searchApi = {
    * @param {Object} params
    * @param {string} [params.section='users'] - Data section (only 'users' currently).
    * @param {string} [params.q=''] - Partial username to search (case-insensitive).
+   * @param {string} [params.email] - Partial email to search (case-insensitive).
    * @param {string} [params.role] - Role filter (USER | ADMIN | SUPER_ADMIN).
    * @param {string} [params.joinedAfter] - ISO date string — include users joined on or after.
    * @param {string} [params.joinedBefore] - ISO date string — include users joined on or before.
@@ -25,6 +32,7 @@ export const searchApi = {
   search: async ({
     section = 'users',
     q = '',
+    email,
     role,
     joinedAfter,
     joinedBefore,
@@ -47,12 +55,17 @@ export const searchApi = {
 
     let query = supabase
       .from('users')
-      .select('id, username, role, created_at, last_login')
+      .select('id, username, email, role, provider, created_at, last_login')
       .order(safeSortBy, { ascending });
 
     // Partial username match — ilike is case-insensitive
     if (q) {
       query = query.ilike('username', `%${q}%`);
+    }
+
+    // Partial email match — ilike is case-insensitive
+    if (email) {
+      query = query.ilike('email', `%${email}%`);
     }
 
     // Role filter

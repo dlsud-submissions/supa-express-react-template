@@ -44,6 +44,9 @@ describe('adminApi', () => {
       await adminApi.getAllUsers();
 
       expect(supabase.from).toHaveBeenCalledWith('users');
+      expect(supabase._chain.select).toHaveBeenCalledWith(
+        'id, username, email, role, provider, avatar_url, created_at, last_login'
+      );
       expect(supabase._chain.order).toHaveBeenCalledWith('created_at', {
         ascending: true,
       });

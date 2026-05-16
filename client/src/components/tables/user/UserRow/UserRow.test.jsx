@@ -27,6 +27,7 @@ describe('UserRow Component', () => {
   const mockUser = {
     id: 'uuid-123',
     username: 'jdoe',
+    email: 'jdoe@example.com',
     role: 'USER',
     provider: 'email',
     avatar_url: null,
@@ -52,11 +53,29 @@ describe('UserRow Component', () => {
 
     // --- Assert ---
     expect(screen.getByText('jdoe')).toBeInTheDocument();
+    expect(screen.getByText('jdoe@example.com')).toBeInTheDocument();
     expect(screen.getByText('USER')).toBeInTheDocument();
     // created_at date rendered as locale string
     expect(
       screen.getByText(new Date('2024-01-01T00:00:00Z').toLocaleDateString())
     ).toBeInTheDocument();
+  });
+
+  it('renders a dash when email is null', () => {
+    // --- Arrange ---
+    vi.mocked(useAuth).mockReturnValue({ user: { role: 'ADMIN' } });
+
+    // --- Act ---
+    render(
+      <table>
+        <tbody>
+          <UserRow user={{ ...mockUser, email: null }} onUpdate={vi.fn()} />
+        </tbody>
+      </table>
+    );
+
+    // --- Assert ---
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('renders a user avatar image when avatar_url is present', () => {
