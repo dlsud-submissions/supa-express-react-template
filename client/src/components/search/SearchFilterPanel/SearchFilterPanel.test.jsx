@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { fireEvent } from '@testing-library/react';
 import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import SearchFilterPanel from './SearchFilterPanel';
 import { sectionConfig } from '../../../config/searchConfig';
@@ -19,7 +20,7 @@ vi.mock(
 describe('SearchFilterPanel Component', () => {
   const baseProps = {
     filters: sectionConfig.users.filters,
-    activeFilters: { role: '', joinedAfter: '', joinedBefore: '' },
+    activeFilters: { email: '', role: '', joinedAfter: '', joinedBefore: '' },
     onChange: vi.fn(),
     onClose: vi.fn(),
   };
@@ -30,6 +31,7 @@ describe('SearchFilterPanel Component', () => {
     render(<SearchFilterPanel {...baseProps} />);
 
     // --- Assert ---
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/role/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/joined after/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/joined before/i)).toBeInTheDocument();
@@ -50,6 +52,22 @@ describe('SearchFilterPanel Component', () => {
     );
   });
 
+  it('calls onChange with updated value when a text filter changes', () => {
+    // --- Arrange ---
+    const onChange = vi.fn();
+
+    // --- Act ---
+    render(<SearchFilterPanel {...baseProps} onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText(/email/i), {
+      target: { value: 'alice@example.com' },
+    });
+
+    // --- Assert ---
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'alice@example.com' })
+    );
+  });
+
   it('calls onChange with all filters cleared on Clear all click', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
@@ -60,6 +78,7 @@ describe('SearchFilterPanel Component', () => {
       <SearchFilterPanel
         {...baseProps}
         activeFilters={{
+          email: 'admin@example.com',
           role: 'ADMIN',
           joinedAfter: '2024-01-01',
           joinedBefore: '',
@@ -71,7 +90,12 @@ describe('SearchFilterPanel Component', () => {
 
     // --- Assert ---
     expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ role: '', joinedAfter: '', joinedBefore: '' })
+      expect.objectContaining({
+        email: '',
+        role: '',
+        joinedAfter: '',
+        joinedBefore: '',
+      })
     );
   });
 
@@ -103,7 +127,12 @@ describe('SearchFilterPanel Component', () => {
     render(
       <SearchFilterPanel
         {...baseProps}
-        activeFilters={{ role: 'ADMIN', joinedAfter: '', joinedBefore: '' }}
+        activeFilters={{
+          email: '',
+          role: 'ADMIN',
+          joinedAfter: '',
+          joinedBefore: '',
+        }}
       />
     );
 
