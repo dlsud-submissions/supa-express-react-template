@@ -74,6 +74,7 @@ const UserManagementPage = () => {
               columns={[
                 'User',
                 'Email',
+                'Verified',
                 'Role',
                 'Provider',
                 'Joined',
