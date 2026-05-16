@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import {
   render,
   screen,
@@ -33,12 +34,16 @@ describe('UserManagementPage Component', () => {
     {
       id: 'uuid-1',
       username: 'alice',
+      email: 'alice@example.com',
+      provider: 'email',
       role: 'USER',
       created_at: '2024-01-01T00:00:00Z',
     },
     {
       id: 'uuid-2',
       username: 'bob',
+      email: 'bob@example.com',
+      provider: 'google',
       role: 'ADMIN',
       created_at: '2024-02-01T00:00:00Z',
     },
@@ -78,7 +83,9 @@ describe('UserManagementPage Component', () => {
     await waitFor(() => {
       expect(screen.getByText(/total users: 2/i)).toBeInTheDocument();
       expect(screen.getByText('alice')).toBeInTheDocument();
+      expect(screen.getByText('alice@example.com')).toBeInTheDocument();
       expect(screen.getByText('bob')).toBeInTheDocument();
+      expect(screen.getByText('bob@example.com')).toBeInTheDocument();
     });
   });
 
@@ -119,6 +126,7 @@ describe('UserManagementPage Component', () => {
 
   it('shows retry button on error and re-fetches on click', async () => {
     // --- Arrange ---
+    const user = userEvent.setup();
     vi.mocked(adminApi.getAllUsers)
       .mockResolvedValueOnce({
         data: null,
@@ -138,7 +146,7 @@ describe('UserManagementPage Component', () => {
 
     // --- Act ---
     const retryBtn = getByRole('button', { name: /retry fetch/i });
-    retryBtn.click();
+    await user.click(retryBtn);
 
     // --- Assert ---
     await waitFor(() => {
