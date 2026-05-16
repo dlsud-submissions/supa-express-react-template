@@ -45,6 +45,15 @@ describe('searchApi', () => {
     expect(supabase._chain.ilike).toHaveBeenCalledWith('username', '%alice%');
   });
 
+  it('applies ilike filter when email is provided', async () => {
+    await searchApi.search({ email: 'example.com' });
+
+    expect(supabase._chain.ilike).toHaveBeenCalledWith(
+      'email',
+      '%example.com%'
+    );
+  });
+
   it('applies eq filter when role is provided', async () => {
     await searchApi.search({ role: 'ADMIN' });
 
@@ -82,6 +91,14 @@ describe('searchApi', () => {
 
     expect(supabase._chain.order).toHaveBeenCalledWith('username', {
       ascending: true,
+    });
+  });
+
+  it('allows sorting by email', async () => {
+    await searchApi.search({ sortBy: 'email', sortDir: 'desc' });
+
+    expect(supabase._chain.order).toHaveBeenCalledWith('email', {
+      ascending: false,
     });
   });
 
