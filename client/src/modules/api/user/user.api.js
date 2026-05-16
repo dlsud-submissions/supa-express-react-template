@@ -1,7 +1,7 @@
 import { supabase } from '../../../lib/supabase.js';
 
 const USER_PROFILE_FIELDS =
-  'id, username, email, role, avatar_url, provider, username_confirmed, created_at, last_login';
+  'id, username, email, is_verified, role, avatar_url, provider, username_confirmed, created_at, last_login';
 
 /**
  * Service for user-related queries via Supabase.
