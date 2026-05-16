@@ -46,6 +46,24 @@
   font-size: var(--text-sm);
 }
 
+.verificationBadge {
+  display: inline-block;
+  padding: var(--space-0-5) var(--space-1);
+  border-radius: 4px;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.verified {
+  color: var(--success-text);
+  border: 1px solid var(--success-text);
+}
+
+.unverified {
+  color: var(--warning-text);
+  border: 1px solid var(--warning-text);
+}
+
 .roleBadge {
   display: inline-block;
   padding: var(--space-0-5) var(--space-1);
