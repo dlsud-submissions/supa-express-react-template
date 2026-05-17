@@ -1,20 +1,23 @@
-// client\src\routes\AuthRoute\AuthRoute.jsx
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { useAuth } from '../../providers/AuthProvider/AuthProvider';
 
 /**
  * Route guard for authenticated pages.
- * - Redirects to login if user is not authenticated.
+ * - Redirects to landing page if user is not authenticated.
+ * - Redirects to /verify-email if authenticated but email not verified.
+ * - Redirects to /setup-username if verified but username not yet chosen
+ *   (covers OAuth users who skipped the username step).
  * - Preserves the attempted location in state for post-login redirection.
  * @returns {JSX.Element}
  */
 const AuthRoute = () => {
-  const { user, loading, needsUsername, isVerified } = useAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
+  // Wait for session rehydration before making any routing decisions
   if (loading) return null;
 
-  // Redirect to Landing Page instead of login
+  // Not logged in → back to landing page
   if (!user) {
     return (
       <Navigate
@@ -28,29 +31,17 @@ const AuthRoute = () => {
     );
   }
 
-  // Redirect Google users with a collision username to complete-profile
-  if (
-    needsUsername &&
-    location.pathname !== '/complete-profile' &&
-    location.pathname !== '/setup-username'
-  ) {
-    return (
-      <Navigate to="/setup-username" state={{ userId: user?.id }} replace />
-    );
+  // Logged in but email not verified → prompt OTP verification
+  if (!user.is_verified) {
+    return <Navigate to="/verify-email" state={{ from: location }} replace />;
   }
 
-  // Redirect unverified users to email verification
-  if (!isVerified && location.pathname !== '/verify-email') {
-    return (
-      <Navigate
-        to="/verify-email"
-        state={{ userId: user?.id, email: user?.email }}
-        replace
-      />
-    );
+  // Verified but username not yet chosen (OAuth path) → prompt username setup
+  if (!user.username_confirmed) {
+    return <Navigate to="/setup-username" state={{ from: location }} replace />;
   }
 
-  // Render children (protected content)
+  // Fully authenticated, verified, and username set → render protected content
   return <Outlet />;
 };
 
