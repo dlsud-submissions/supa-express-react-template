@@ -15,7 +15,12 @@ CREATE INDEX IF NOT EXISTS verification_tokens_user_purpose_expires_idx
 
 ALTER TABLE public.verification_tokens ENABLE ROW LEVEL SECURITY;
 
+-- Drop policies before (re-)creating so re-runs are safe
+DROP POLICY IF EXISTS deny_all ON public.verification_tokens;
+DROP POLICY IF EXISTS allow_service_role ON public.verification_tokens;
+
+-- Default-deny: no client can read or write tokens directly
 CREATE POLICY deny_all ON public.verification_tokens
+  AS RESTRICTIVE
   FOR ALL
-  USING (false)
-  WITH CHECK (false);
+  USING (false);
