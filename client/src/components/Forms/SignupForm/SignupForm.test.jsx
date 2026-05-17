@@ -11,43 +11,11 @@ vi.mock('../../../modules/api/auth/auth.api.js', () => ({
   },
 }));
 
-// Mock AuthProvider for loginWithGoogle
-vi.mock(
-  '../../../providers/AuthProvider/AuthProvider',
-  async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      useAuth: vi.fn(),
-      AuthProvider: ({ children }) => children,
-    };
-  }
-);
-
-// Mock ToastProvider
-vi.mock(
-  '../../../providers/ToastProvider/ToastProvider',
-  async (importOriginal) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      useToast: vi.fn(() => ({ showToast: vi.fn() })),
-      ToastProvider: ({ children }) => children,
-    };
-  }
-);
-
 import { authApi } from '../../../modules/api/auth/auth.api.js';
-import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-
-const mockLoginWithGoogle = vi.fn();
 
 describe('SignupForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAuth).mockReturnValue({
-      loginWithGoogle: mockLoginWithGoogle,
-    });
   });
 
   const renderForm = () =>
@@ -70,6 +38,19 @@ describe('SignupForm', () => {
     expect(usernameInput).toHaveValue('newuser');
   });
 
+  it('updates email input value on change', async () => {
+    // --- Arrange ---
+    const user = userEvent.setup();
+    renderForm();
+
+    // --- Act ---
+    const emailInput = screen.getByLabelText(/email/i);
+    await user.type(emailInput, 'newuser@example.com');
+
+    // --- Assert ---
+    expect(emailInput).toHaveValue('newuser@example.com');
+  });
+
   it('shows validation error when passwords do not match', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
@@ -77,6 +58,7 @@ describe('SignupForm', () => {
 
     // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'testuser');
+    await user.type(screen.getByLabelText(/email/i), 'test@example.com');
     await user.type(screen.getByLabelText(/^password/i), 'Password1');
     await user.type(screen.getByLabelText(/confirm password/i), 'Different1');
     await user.click(screen.getByRole('button', { name: /register/i }));
@@ -88,7 +70,7 @@ describe('SignupForm', () => {
     expect(authApi.signup).not.toHaveBeenCalled();
   });
 
-  it('calls authApi.signup() with username and password on valid submit', async () => {
+  it('calls authApi.signup() with email, username, and password on valid submit', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
     // Supabase SDK shape: { data, error }
@@ -97,6 +79,7 @@ describe('SignupForm', () => {
 
     // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'newuser');
+    await user.type(screen.getByLabelText(/email/i), 'newuser@example.com');
     await user.type(screen.getByLabelText(/^password/i), 'Password1');
     await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /register/i }));
@@ -106,6 +89,7 @@ describe('SignupForm', () => {
       expect(authApi.signup).toHaveBeenCalledWith(
         expect.objectContaining({
           username: 'newuser',
+          email: 'newuser@example.com',
           password: 'Password1',
         })
       );
@@ -123,6 +107,7 @@ describe('SignupForm', () => {
 
     // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'existing');
+    await user.type(screen.getByLabelText(/email/i), 'existing@example.com');
     await user.type(screen.getByLabelText(/^password/i), 'Password1');
     await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /register/i }));
@@ -142,36 +127,12 @@ describe('SignupForm', () => {
 
     // --- Act ---
     await user.type(screen.getByLabelText(/username/i), 'newuser');
+    await user.type(screen.getByLabelText(/email/i), 'newuser@example.com');
     await user.type(screen.getByLabelText(/^password/i), 'Password1');
     await user.type(screen.getByLabelText(/confirm password/i), 'Password1');
     await user.click(screen.getByRole('button', { name: /register/i }));
 
     // --- Assert ---
     expect(screen.getByRole('button', { name: /registering/i })).toBeDisabled();
-  });
-
-  it('renders the Google sign-up button', () => {
-    // --- Arrange ---
-    renderForm();
-
-    // --- Assert ---
-    expect(
-      screen.getByRole('button', { name: /sign up with google/i })
-    ).toBeInTheDocument();
-  });
-
-  it('calls loginWithGoogle when the Google button is clicked', async () => {
-    // --- Arrange ---
-    const user = userEvent.setup();
-    mockLoginWithGoogle.mockResolvedValueOnce({ error: null });
-    renderForm();
-
-    // --- Act ---
-    await user.click(
-      screen.getByRole('button', { name: /sign up with google/i })
-    );
-
-    // --- Assert ---
-    expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1);
   });
 });

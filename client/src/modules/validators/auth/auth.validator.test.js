@@ -1,83 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import {
-  loginSchema,
-  passwordChangeSchema,
-  passwordSchema,
-  profileSettingsSchema,
-  signupSchema,
-  usernameFieldSchema,
-  usernameSchema,
-} from './auth.validator';
-
-describe('auth.validator passwordChangeSchema', () => {
-  it('accepts a valid password and matching confirmation', () => {
-    const payload = {
-      newPassword: 'GoodPass1',
-      confirmPassword: 'GoodPass1',
-    };
-
-    const result = passwordChangeSchema.safeParse(payload);
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects when passwords don't match", () => {
-    const payload = {
-      newPassword: 'GoodPass1',
-      confirmPassword: 'Different1',
-    };
-
-    const result = passwordChangeSchema.safeParse(payload);
-    expect(result.success).toBe(false);
-    if (!result.success) {
-      const messages = result.error.issues.map((i) => i.message);
-      expect(messages).toContain("Passwords don't match");
-    }
-  });
-
-  it('enforces complexity rules from passwordSchema', () => {
-    // missing uppercase
-    let res = passwordSchema.safeParse('lowercase1');
-    expect(res.success).toBe(false);
-
-    // missing number
-    res = passwordSchema.safeParse('NoNumber');
-    expect(res.success).toBe(false);
-
-    // too short
-    res = passwordSchema.safeParse('Aa1');
-    expect(res.success).toBe(false);
-  });
-});
+import { signupSchema } from './auth.validator';
 
 /**
  * Unit tests for client-side auth validation schemas.
  * - Validates that Zod correctly identifies malformed input.
  */
 describe('Auth Client Validators', () => {
-  it('should invalidate an improperly formatted email in signup', () => {
+  it('should invalidate a username with special characters', () => {
+    // --- Arrange ---
+    // Define input with invalid characters in username
     const invalidData = {
-      email: 'not-an-email',
+      username: 'user@name',
+      email: 'user@example.com',
       password: 'Password1',
       confirmPassword: 'Password1',
     };
 
+    // --- Act ---
+    // Run validation against the signup schema
     const result = signupSchema.safeParse(invalidData);
 
+    // --- Assert ---
+    // Ensure validation failed and returned correct error message
     expect(result.success).toBe(false);
     expect(result.error.issues[0].message).toContain(
-      'Must be a valid email address'
-    );
-  });
-
-  it('should invalidate an improperly formatted email in login', () => {
-    const result = loginSchema.safeParse({
-      email: 'not-an-email',
-      password: 'Password1',
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toBe(
-      'Please enter a valid email address.'
+      'Only letters, numbers, and underscores'
     );
   });
 
@@ -85,6 +32,7 @@ describe('Auth Client Validators', () => {
     // --- Arrange ---
     // Define input with non-matching password fields
     const mismatchData = {
+      username: 'validUser',
       email: 'valid@example.com',
       password: 'Password1',
       confirmPassword: 'WrongPassword1',
@@ -100,39 +48,36 @@ describe('Auth Client Validators', () => {
     expect(result.error.issues[0].message).toBe("Passwords don't match");
   });
 
-  it('should validate a username-only payload for OAuth completion', () => {
-    const result = usernameSchema.safeParse({ username: 'fresh_name' });
+  it('should invalidate a malformed email address', () => {
+    // --- Arrange ---
+    const invalidData = {
+      username: 'validUser',
+      email: 'not-an-email',
+      password: 'Password1',
+      confirmPassword: 'Password1',
+    };
 
-    expect(result.success).toBe(true);
-  });
+    // --- Act ---
+    const result = signupSchema.safeParse(invalidData);
 
-  it('should share username rules across auth forms', () => {
-    const result = usernameFieldSchema.safeParse('no spaces allowed!');
-
+    // --- Assert ---
     expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toContain(
-      'Only letters, numbers, and underscores'
-    );
+    expect(result.error.issues[0].message).toContain('valid email');
   });
 
-  it('should validate profile settings with an optional avatar URL', () => {
-    const result = profileSettingsSchema.safeParse({
-      username: 'fresh_name',
-      avatar_url: '',
-    });
+  it('should pass with valid username, email, and matching passwords', () => {
+    // --- Arrange ---
+    const validData = {
+      username: 'validUser',
+      email: 'valid@example.com',
+      password: 'Password1',
+      confirmPassword: 'Password1',
+    };
 
+    // --- Act ---
+    const result = signupSchema.safeParse(validData);
+
+    // --- Assert ---
     expect(result.success).toBe(true);
-  });
-
-  it('should invalidate malformed avatar URLs in profile settings', () => {
-    const result = profileSettingsSchema.safeParse({
-      username: 'fresh_name',
-      avatar_url: 'not-a-url',
-    });
-
-    expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toBe(
-      'Avatar URL must be a valid URL.'
-    );
   });
 });

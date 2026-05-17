@@ -8,88 +8,40 @@ import { supabase } from '../../../lib/supabase.js';
 export const authApi = {
   /**
    * Registers a new user via Supabase Auth.
-   * - Email is derived from username using the app.local convention.
+   * - Uses the user's real email address (required for email verification flow).
    * - Username is stored in user_metadata so the DB trigger can read it.
-   * @param {Object} userData - Contains username and password.
+   * @param {Object} userData - Contains email, password, and username.
    * @returns {Promise<{ data, error }>}
    */
-  signup: async ({ email, password }) => {
+  signup: async ({ email, password, username }) => {
     return supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { username },
+      },
     });
+  },
+
+  /**
+   * Authenticates a user via Supabase Auth using their email.
+   * @param {Object} credentials - Contains email and password.
+   * @returns {Promise<{ data, error }>}
+   */
+  loginWithEmail: async ({ email, password }) => {
+    return supabase.auth.signInWithPassword({ email, password });
   },
 
   /**
    * Authenticates a user via Supabase Auth.
-   * @param {Object} credentials - Contains email and password.
+   * - Email is derived from username using the app.local convention.
+   * @param {Object} credentials - Contains username and password.
    * @returns {Promise<{ data, error }>}
    */
-  login: async ({ email, password }) => {
+  login: async ({ username, password }) => {
     return supabase.auth.signInWithPassword({
-      email,
+      email: `${username}@app.local`,
       password,
-    });
-  },
-
-  /**
-   * Sends an OTP via the server-side OTP API.
-   * @param {string} userId
-   * @param {string} email
-   * @param {string} purpose
-   */
-  sendOtp: async (userId, email, purpose) => {
-    const response = await fetch('/api/otp/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId, email, purpose }),
-    });
-
-    return response.json();
-  },
-
-  /**
-   * Verifies an OTP via the server-side OTP API.
-   * @param {string} userId
-   * @param {string} token
-   * @param {string} purpose
-   */
-  verifyOtp: async (userId, token, purpose) => {
-    const response = await fetch('/api/otp/verify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId, token, purpose }),
-    });
-
-    return response.json();
-  },
-
-  /**
-   * Updates the currently authenticated user's password.
-   * Supabase requires an active session for this operation.
-   * @param {string} newPassword
-   * @returns {Promise<{ data, error }>}
-   */
-  updatePassword: async (newPassword) => {
-    return supabase.auth.updateUser({ password: newPassword });
-  },
-
-  /**
-   * Initiates Google OAuth sign-in via Supabase Auth.
-   * - Redirects the browser to Google's consent screen.
-   * - On return, Supabase exchanges the code and fires onAuthStateChange.
-   * @returns {Promise<{ error }>}
-   */
-  loginWithGoogle: async () => {
-    return supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
     });
   },
 

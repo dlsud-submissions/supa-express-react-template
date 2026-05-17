@@ -2,31 +2,25 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { authApi } from '../../../modules/api/auth/auth.api.js';
 import { signupSchema } from '../../../modules/validators/auth/auth.validator.js';
-import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
-import GoogleAuthButton from '../../buttons/GoogleAuthButton/GoogleAuthButton';
 import ValidationError from '../../errors/ValidationError/ValidationError';
 import styles from './SignupForm.module.css';
 
 /**
  * Signup form component for user registration.
  * - Calls authApi.signup() which uses Supabase Auth directly.
- * - Navigates to /log-in on success.
+ * - Navigates to /verify-email on success so the user can confirm their address.
  * - Handles { data, error } return shape from Supabase SDK.
- * - Supports Google OAuth via AuthProvider.loginWithGoogle().
  * @returns {JSX.Element} The rendered signup form.
  */
 const SignupForm = () => {
-  const { loginWithGoogle } = useAuth();
-  const { showToast } = useToast();
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
   const [errorData, setErrorData] = useState({ message: '', errors: [] });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const navigate = useNavigate();
 
   /**
@@ -63,7 +57,11 @@ const SignupForm = () => {
     setIsSubmitting(true);
 
     try {
-      const { error } = await authApi.signup(formData);
+      const { data, error } = await authApi.signup({
+        email: formData.email,
+        password: formData.password,
+        username: formData.username,
+      });
 
       if (error) {
         setErrorData({
@@ -73,7 +71,8 @@ const SignupForm = () => {
         return;
       }
 
-      navigate('/log-in');
+      // Supabase sends a confirmation email; direct user to verify-email page
+      navigate('/verify-email');
     } catch (err) {
       setErrorData({
         message: `An error occurred: ${err.message}`,
@@ -84,26 +83,6 @@ const SignupForm = () => {
     }
   };
 
-  /**
-   * Initiates the Google OAuth redirect via AuthProvider.loginWithGoogle().
-   * - Google accounts are created automatically on first login.
-   * - Surfaces any error (e.g. provider not enabled) as a toast.
-   */
-  const handleGoogleSignup = async () => {
-    setIsGoogleLoading(true);
-    const { error } = await loginWithGoogle();
-    if (error) {
-      showToast(
-        error.message?.includes('provider is not enabled')
-          ? 'Google sign-in is not configured yet. Please use username and password.'
-          : `Google sign-in failed: ${error.message}`,
-        'error'
-      );
-      setIsGoogleLoading(false);
-    }
-    // On success the browser redirects — loading stays true until navigation
-  };
-
   return (
     <div className={`${styles.formContainer} animate-fade-in`}>
       <h2>Create Account</h2>
@@ -112,6 +91,18 @@ const SignupForm = () => {
       <ValidationError message={errorData.message} errors={errorData.errors} />
 
       <form onSubmit={handleSubmit} className={styles.form} noValidate>
+        <div className={styles.inputGroup}>
+          <label htmlFor="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
         <div className={styles.inputGroup}>
           <label htmlFor="email">Email</label>
           <input
@@ -148,29 +139,14 @@ const SignupForm = () => {
           />
         </div>
 
-      try {
-        const { data, error } = await authApi.signup({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (error) {
-          setErrorData({
-            message: error.message || 'Signup failed',
-            errors: [],
-          });
-          return;
-        }
-
-        const userId = data?.user?.id ?? data?.id;
-        await authApi.sendOtp(userId, formData.email, 'email_verification');
-        navigate('/verify-email', { state: { userId, email: formData.email } });
-      } catch (err) {
-      <GoogleAuthButton
-        onClick={handleGoogleSignup}
-        isLoading={isGoogleLoading}
-        label="Sign up with Google"
-      />
+        <button
+          type="submit"
+          className={styles.submitBtn}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? 'Registering...' : 'Register'}
+        </button>
+      </form>
 
       <p className={styles.footerText}>
         Already have an account?{' '}

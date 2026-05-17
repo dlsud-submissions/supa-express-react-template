@@ -10,7 +10,6 @@ vi.mock('../../../lib/supabase.js', () => ({
       signInWithPassword: vi.fn(),
       signOut: vi.fn(),
       getSession: vi.fn(),
-      updateUser: vi.fn(),
     },
   },
 }));
@@ -18,36 +17,50 @@ vi.mock('../../../lib/supabase.js', () => ({
 describe('authApi', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
   });
 
   describe('signup', () => {
-    it('calls signUp with the provided email', async () => {
+    it('calls signUp with real email and username metadata', async () => {
       const userData = {
-        email: 'test@example.com',
+        email: 'newuser@example.com',
         password: 'securePassword',
+        username: 'testuser',
       };
 
       await authApi.signup(userData);
 
       expect(supabase.auth.signUp).toHaveBeenCalledWith({
-        email: 'test@example.com',
+        email: 'newuser@example.com',
         password: 'securePassword',
+        options: {
+          data: { username: 'testuser' },
+        },
       });
     });
   });
 
   describe('login', () => {
-    it('calls signInWithPassword with the provided email', async () => {
-      const credentials = {
-        email: 'test@example.com',
-        password: 'securePassword',
-      };
+    it('calls signInWithPassword with derived app.local email', async () => {
+      const credentials = { username: 'testuser', password: 'securePassword' };
 
       await authApi.login(credentials);
 
       expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
-        email: 'test@example.com',
+        email: 'testuser@app.local',
+        password: 'securePassword',
+      });
+    });
+  });
+
+  describe('loginWithEmail', () => {
+    it('calls signInWithPassword with the provided email directly', async () => {
+      await authApi.loginWithEmail({
+        email: 'user@example.com',
+        password: 'securePassword',
+      });
+
+      expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+        email: 'user@example.com',
         password: 'securePassword',
       });
     });
@@ -60,76 +73,10 @@ describe('authApi', () => {
     });
   });
 
-  describe('sendOtp', () => {
-    it('posts OTP send payload to the server API', async () => {
-      const mockedResponse = { success: true };
-      global.fetch.mockResolvedValueOnce({
-        json: vi.fn().mockResolvedValueOnce(mockedResponse),
-      });
-
-      const response = await authApi.sendOtp(
-        '11111111-1111-1111-1111-111111111111',
-        'test@example.com',
-        'email_verification'
-      );
-
-      expect(global.fetch).toHaveBeenCalledWith('/api/otp/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: '11111111-1111-1111-1111-111111111111',
-          email: 'test@example.com',
-          purpose: 'email_verification',
-        }),
-      });
-      expect(response).toEqual(mockedResponse);
-    });
-  });
-
-  describe('verifyOtp', () => {
-    it('posts OTP verification payload to the server API', async () => {
-      const mockedResponse = { valid: true };
-      global.fetch.mockResolvedValueOnce({
-        json: vi.fn().mockResolvedValueOnce(mockedResponse),
-      });
-
-      const response = await authApi.verifyOtp(
-        '11111111-1111-1111-1111-111111111111',
-        '123456',
-        'email_verification'
-      );
-
-      expect(global.fetch).toHaveBeenCalledWith('/api/otp/verify', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: '11111111-1111-1111-1111-111111111111',
-          token: '123456',
-          purpose: 'email_verification',
-        }),
-      });
-      expect(response).toEqual(mockedResponse);
-    });
-  });
-
   describe('checkStatus', () => {
     it('calls getSession to retrieve existing session data', async () => {
       await authApi.checkStatus();
       expect(supabase.auth.getSession).toHaveBeenCalled();
-    });
-  });
-
-  describe('updatePassword', () => {
-    it('calls updateUser with the new password', async () => {
-      await authApi.updatePassword('NewP@ssw0rd');
-
-      expect(supabase.auth.updateUser).toHaveBeenCalledWith({
-        password: 'NewP@ssw0rd',
-      });
     });
   });
 });
