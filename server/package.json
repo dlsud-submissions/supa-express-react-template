@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "=== CORE WORKFLOW ===": "",
-    "dev": "cross-env NODE_ENV=development nodemon src/app.js",
+    "dev": "cross-env NODE_ENV=development nodemon --legacy-watch src/app.js",
     "start": "cross-env NODE_ENV=production node src/app.js",
     "start:watch": "cross-env NODE_ENV=production node --watch src/app.js",
     "=== TESTING ===": "",
