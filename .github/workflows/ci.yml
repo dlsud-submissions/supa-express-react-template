@@ -39,3 +39,27 @@ jobs:
         env:
           NODE_ENV: test
           CORS_ALLOWED_ORIGINS: http://localhost:5173
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build client image (dev)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          target: dev
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build server image (dev)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          target: dev
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
