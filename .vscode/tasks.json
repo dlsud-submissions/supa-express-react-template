@@ -125,6 +125,37 @@
         "reveal": "always",
         "panel": "shared"
       }
+    },
+    {
+      "label": "🐳 Docker: Compose Up",
+      "type": "npm",
+      "script": "docker:up",
+      "presentation": {
+        "group": "docker",
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      }
+    },
+    {
+      "label": "🐳 Docker: Compose Down",
+      "type": "npm",
+      "script": "docker:down",
+      "presentation": {
+        "group": "docker",
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "🐳 Docker: Build Production",
+      "type": "npm",
+      "script": "docker:build",
+      "presentation": {
+        "group": "docker",
+        "reveal": "always",
+        "panel": "dedicated"
+      }
     }
   ]
 }

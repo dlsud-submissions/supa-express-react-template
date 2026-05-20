@@ -12,6 +12,45 @@
 
 ---
 
+## Docker Setup (recommended)
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or Docker Engine + Compose v2
+
+### Steps
+
+1. Copy env files:
+
+   ```bash
+   cp client/.env.example client/.env
+   cp server/.env.example server/.env
+   ```
+
+2. Fill in real Supabase credentials in both files (same values as the manual setup).
+3. Start everything (run from the project root where `docker-compose.yml` lives):
+
+   ```bash
+   docker compose up
+   ```
+
+4. The app is now available at `http://localhost:5173`.
+5. To stop:
+
+   ```bash
+   docker compose down
+   ```
+
+**Notes**
+
+- Run `docker compose up` from the repository root (the folder containing `docker-compose.yml`).
+- Source directories are bind-mounted — edits on your host trigger HMR / nodemon automatically.
+- `node_modules` live inside the container; never install packages on the host for Docker usage.
+- To install a new package: `docker compose run --rm client npm install <pkg>` (or `server`).
+- To run tests inside a container: `docker compose run --rm client npm run test:run`.
+
+---
+
 ## 1. Create a Supabase Project
 
 1. Go to [supabase.com](https://supabase.com) and sign in
