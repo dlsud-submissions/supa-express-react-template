@@ -28,7 +28,7 @@
    ```
 
 2. Fill in real Supabase credentials in both files (same values as the manual setup).
-3. Start everything:
+3. Start everything (run from the project root where `docker-compose.yml` lives):
 
    ```bash
    docker compose up
@@ -43,6 +43,7 @@
 
 **Notes**
 
+- Run `docker compose up` from the repository root (the folder containing `docker-compose.yml`).
 - Source directories are bind-mounted — edits on your host trigger HMR / nodemon automatically.
 - `node_modules` live inside the container; never install packages on the host for Docker usage.
 - To install a new package: `docker compose run --rm client npm install <pkg>` (or `server`).

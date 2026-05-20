@@ -10,7 +10,11 @@
     "client": "npm --prefix client run dev",
     "server": "npm --prefix server run dev",
     "=== SETUP ===": "",
-    "install:all": "npm install && npm --prefix client install && npm --prefix server install"
+    "install:all": "npm install && npm --prefix client install && npm --prefix server install",
+    "docker:up": "docker compose up",
+    "docker:down": "docker compose down",
+    "docker:prod": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up",
+    "docker:build": "docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build"
   },
   "dependencies": {},
   "devDependencies": {
