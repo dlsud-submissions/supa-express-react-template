@@ -1,9 +1,8 @@
-# Project Name
+# supa-express-react-template
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![The Odin Project](https://img.shields.io/badge/The%20Odin%20Project-NodeJS-red)](https://www.theodinproject.com/paths/full-stack-javascript/courses/nodejs)
 
-> A full-stack application built with React and Express as part of The Odin Project's NodeJS curriculum. Features Supabase Auth, role-based access control enforced by Row Level Security, a Supabase-backed CRUD layer, and a modular search system.
+> A full-stack starter template built with React, Express, and Supabase. Includes Supabase Auth, role-based access control enforced by Row Level Security, a Supabase-backed CRUD layer, and a modular search system.
 
 ## 📋 Table of Contents
 
@@ -42,7 +41,7 @@ npm run dev           # start client + server concurrently
 ## 📁 Project Structure
 
 ```
-template-react-expressjs/
+supa-express-react-template/
 ├── client/               # React + Vite frontend
 │   └── src/
 │       ├── components/   # UI components grouped by domain
@@ -114,13 +113,13 @@ state simulation, and API module testing conventions.
 
 ## 🙏 Acknowledgments
 
-- **The Odin Project** — For providing an amazing free curriculum
-- **The TOP Community** — For being supportive and helpful throughout
+- **Supabase** — For providing the database and authentication platform
+- **Open source community** — For sharing resources and examples that helped shape this starter template
 
 ---
 
 <div align="center">
 
-Built with 💡 and ☕ as part of my journey through <a href="https://www.theodinproject.com/paths/full-stack-javascript/courses/nodejs">The Odin Project — NodeJS</a>
+Built with 💡 and ☕ as a reusable React + Express starter template
 
 </div>

@@ -1,5 +1,5 @@
-import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
+import 'dotenv/config';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -27,7 +27,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
  */
 const SEED_USERS = [
   { username: 'Bryan', password: 'testpass123', role: 'USER' },
-  { username: 'Odin', password: 'testpass123', role: 'ADMIN' },
+  { username: 'Admin', password: 'testpass123', role: 'ADMIN' },
   { username: 'Damon', password: 'testpass123', role: 'USER' },
   { username: 'Boss', password: 'testpass123', role: 'SUPER_ADMIN' },
 ];

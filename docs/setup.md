@@ -122,7 +122,7 @@ VITE_SUPABASE_ANON_KEY=<your-anon-key>
 
 ## 5. Seed the Database (Optional)
 
-To create the four default test accounts (Bryan, Odin, Damon, Boss),
+To create the four default test accounts (Bryan, Admin, Damon, Boss),
 run the seed SQL after your schema is applied:
 
 **Option A — Supabase Dashboard SQL Editor**
@@ -141,11 +141,11 @@ node src/db/seed.js
 Both approaches create the same four development users and keep the
 password as `testpass123` for each account:
 
-| Username | Role |
-| -------- | ---- |
-| `Bryan`  | `USER` |
-| `Odin`   | `ADMIN` |
-| `Damon`  | `USER` |
+| Username | Role          |
+| -------- | ------------- |
+| `Bryan`  | `USER`        |
+| `Admin`  | `ADMIN`       |
+| `Damon`  | `USER`        |
 | `Boss`   | `SUPER_ADMIN` |
 
 See [Issue #17](https://github.com/[REPO_AUTHOR]/[REPO_NAME]/issues/17)
@@ -179,7 +179,7 @@ Or in VS Code: **Terminal → Run Task → 🚀 Dev: Start All**
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `Missing Supabase environment variables` error on server start | Check that `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set in `server/.env`                                 |
 | `Missing Supabase environment variables` error in browser      | Check that `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set in `client/.env`                               |
-| Login returns "Invalid login credentials"                      | The user may not exist yet — run `supabase/seed.sql`, use the Node seed helper, or sign up manually               |
+| Login returns "Invalid login credentials"                      | The user may not exist yet — run `supabase/seed.sql`, use the Node seed helper, or sign up manually                |
 | User row missing after signup                                  | Check that `supabase/schema.sql` was applied and the auth triggers exist before running later migrations           |
 | Google signup creates a user but `username` is null            | Migration 02 was not applied — run `supabase/migrations/02_oauth_user_trigger.sql` in the SQL Editor               |
 | Google signup fails with a DB constraint error                 | Migration 02 was not applied — see above                                                                           |

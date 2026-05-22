@@ -4,7 +4,7 @@
 --
 -- Accounts created:
 --   - Bryan / testpass123 / USER
---   - Odin  / testpass123 / ADMIN
+--   - Admin / testpass123 / ADMIN
 --   - Damon / testpass123 / USER
 --   - Boss  / testpass123 / SUPER_ADMIN
 --
@@ -25,7 +25,7 @@ CREATE TEMP TABLE seed_users (
 INSERT INTO seed_users (username, password, role)
 VALUES
   ('Bryan', 'testpass123', 'USER'),
-  ('Odin', 'testpass123', 'ADMIN'),
+  ('Admin', 'testpass123', 'ADMIN'),
   ('Damon', 'testpass123', 'USER'),
   ('Boss', 'testpass123', 'SUPER_ADMIN');
 
