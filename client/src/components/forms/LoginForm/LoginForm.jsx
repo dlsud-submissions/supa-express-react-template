@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { supabase } from '../../../lib/supabase.js';
 import { loginSchema } from '../../../modules/validators/auth/auth.validator.js';
-import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import { useToast } from '../../../providers/ToastProvider/ToastProvider';
-import AuthenticationError from '../../errors/AuthenticationError/AuthenticationError';
-import ValidationError from '../../errors/ValidationError/ValidationError';
+import { useAuth } from '../../../providers/AuthProvider/AuthProvider.jsx';
+import { useToast } from '../../../providers/ToastProvider/ToastProvider.jsx';
+import AuthenticationError from '../../errors/AuthenticationError/AuthenticationError.jsx';
+import ValidationError from '../../errors/ValidationError/ValidationError.jsx';
 import styles from './LoginForm.module.css';
 
 /**

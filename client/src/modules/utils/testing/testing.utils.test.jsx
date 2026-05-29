@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render as rtlRender, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { render } from './testing.utils';
 
 // Mock providers to verify the wrapper includes them
@@ -45,7 +45,9 @@ describe('Testing Utilities', () => {
 
     // --- Act ---
     // Render with specific initial path
-    const { container } = render(<TestComponent />, { initialEntries: ['/test-path'] });
+    const { container } = render(<TestComponent />, {
+      initialEntries: ['/test-path'],
+    });
 
     // --- Assert ---
     // Verify standard rendering still occurs with options passed

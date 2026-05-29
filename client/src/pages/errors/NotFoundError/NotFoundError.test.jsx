@@ -6,14 +6,17 @@ import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import NotFoundError from './NotFoundError';
 
 // Mock AuthProvider to control user roles and prevent state side effects
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 describe('NotFoundError Component', () => {
   it('should display the 404 code and error message', () => {

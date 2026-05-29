@@ -1,6 +1,6 @@
 import js from '@eslint/js';
-import globals from 'globals';
 import { defineConfig } from 'eslint/config';
+import globals from 'globals';
 
 /**
  * ESLint configuration for the Node.js backend.
@@ -27,6 +27,9 @@ export default defineConfig([
       globals: {
         ...globals.node,
         ...globals.jest,
+        // vitest.setup.js registers mockExpressContext as a global
+        // available in all server test files
+        mockExpressContext: 'readonly',
       },
     },
 
@@ -36,10 +39,20 @@ export default defineConfig([
       ...js.configs.recommended.rules,
 
       // Permit unused variables if they are uppercase (Env vars or Constants)
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // or intentionally underscore-prefixed.
+      'no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' },
+      ],
 
       // Warn on console usage to encourage proper logging in production
       'no-console': 'warn',
+    },
+  },
+  {
+    files: ['src/db/seed.js'],
+    rules: {
+      'no-console': 'off',
     },
   },
 ]);

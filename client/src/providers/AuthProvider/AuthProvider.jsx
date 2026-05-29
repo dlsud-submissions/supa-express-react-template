@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
 
       setUser(data);
       setAuthError(null);
-    } catch (err) {
+    } catch (_err) {
       setUser(null);
       setAuthError('Failed to load user profile.');
     } finally {

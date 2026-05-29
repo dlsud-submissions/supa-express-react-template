@@ -1,23 +1,23 @@
 import { createBrowserRouter } from 'react-router';
-import App from './pages/App/App';
-import { ThemeProvider } from './providers/ThemeProvider/ThemeProvider';
-import { AuthProvider } from './providers/AuthProvider/AuthProvider';
-import { ToastProvider } from './providers/ToastProvider/ToastProvider';
-import MainLayout from './layouts/MainLayout/MainLayout';
-import AuthRoute from './routes/AuthRoute/AuthRoute';
-import AdminRoute from './routes/AdminRoute/AdminRoute';
-import LandingPage from './pages/LandingPage/LandingPage';
-import SignupForm from './components/forms/SignupForm/SignupForm';
 import LoginForm from './components/forms/LoginForm/LoginForm';
+import SignupForm from './components/forms/SignupForm/SignupForm';
+import MainLayout from './layouts/MainLayout/MainLayout';
+import App from './pages/App/App';
+import LandingPage from './pages/LandingPage/LandingPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
-import UserDashboard from './pages/user/UserDashboard/UserDashboard';
 import SearchPage from './pages/SearchPage/SearchPage';
 import AdminDashboard from './pages/admin/AdminDashboard/AdminDashboard';
 import UserManagementPage from './pages/admin/UserManagementPage/UserManagementPage';
-import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
+import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
 import ForbiddenError from './pages/errors/ForbiddenError/ForbiddenError';
 import InternalServerError from './pages/errors/InternalServerError/InternalServerError';
-import ExternalServiceError from './pages/errors/ExternalServiceError/ExternalServiceError';
+import NotFoundError from './pages/errors/NotFoundError/NotFoundError';
+import UserDashboard from './pages/user/UserDashboard/UserDashboard';
+import { AuthProvider } from './providers/AuthProvider/AuthProvider';
+import { ThemeProvider } from './providers/ThemeProvider/ThemeProvider';
+import { ToastProvider } from './providers/ToastProvider/ToastProvider';
+import AdminRoute from './routes/AdminRoute/AdminRoute';
+import AuthRoute from './routes/AuthRoute/AuthRoute';
 
 /**
  * Global application router configuration.

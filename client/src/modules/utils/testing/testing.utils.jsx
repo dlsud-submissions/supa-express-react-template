@@ -52,7 +52,6 @@ const customRender = (ui, { initialEntries, ...options } = {}) => {
 };
 
 // Re-export everything from RTL
-// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 
 // Override the standard render with our custom version

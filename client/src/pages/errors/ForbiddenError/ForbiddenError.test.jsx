@@ -5,14 +5,17 @@ import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import ForbiddenError from './ForbiddenError';
 
 // Mock AuthProvider to prevent background state updates
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 describe('ForbiddenError Component', () => {
   it('should render the 403 error code and permission message', () => {
@@ -31,7 +34,7 @@ describe('ForbiddenError Component', () => {
   it('should navigate to home when clicking the return button', async () => {
     // --- Arrange ---
     const user = userEvent.setup();
-    
+
     // Create a stable reference to the mock function
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);

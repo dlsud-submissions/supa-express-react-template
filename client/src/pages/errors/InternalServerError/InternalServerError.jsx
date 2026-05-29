@@ -25,7 +25,7 @@ const InternalServerError = () => {
           fix it.
         </p>
 
-        <ReturnHomeButton/>
+        <ReturnHomeButton />
       </div>
     </main>
   );

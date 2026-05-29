@@ -5,9 +5,9 @@ import {
   render,
   screen,
   waitFor,
-} from '../../../modules/utils/testing/testing.utils';
-import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
-import LoginForm from './LoginForm';
+} from '../../../modules/utils/testing/testing.utils.jsx';
+import { useAuth } from '../../../providers/AuthProvider/AuthProvider.jsx';
+import LoginForm from './LoginForm.jsx';
 
 // Global mock for navigation to avoid hoisting ReferenceErrors
 const mockNavigate = vi.fn();
