@@ -91,7 +91,10 @@ describe('AdminRoute Component', () => {
     render(
       <Routes>
         <Route element={<AdminRoute />}>
-          <Route path="/" element={<div data-testid="admin-content">Admin Dashboard</div>} />
+          <Route
+            path="/"
+            element={<div data-testid="admin-content">Admin Dashboard</div>}
+          />
         </Route>
       </Routes>
     );

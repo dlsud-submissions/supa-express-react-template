@@ -5,14 +5,17 @@ import { render, screen } from '../../../modules/utils/testing/testing.utils';
 import InternalServerError from './InternalServerError';
 
 // Mock AuthProvider to prevent background state updates
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 describe('InternalServerError Component', () => {
   beforeEach(() => {
@@ -36,7 +39,7 @@ describe('InternalServerError Component', () => {
     // --- Arrange ---
     const user = userEvent.setup();
     vi.mocked(useRouteError).mockReturnValue({});
-    
+
     // Create a stable reference to the mock function used by the router
     const navigateMock = vi.fn();
     vi.mocked(useNavigate).mockReturnValue(navigateMock);

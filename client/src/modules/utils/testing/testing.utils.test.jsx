@@ -45,7 +45,9 @@ describe('Testing Utilities', () => {
 
     // --- Act ---
     // Render with specific initial path
-    const { container } = render(<TestComponent />, { initialEntries: ['/test-path'] });
+    const { container } = render(<TestComponent />, {
+      initialEntries: ['/test-path'],
+    });
 
     // --- Assert ---
     // Verify standard rendering still occurs with options passed

@@ -4,13 +4,16 @@ import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import UserDashboard from './UserDashboard';
 
 // Mock the auth hook to provide user context
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+    };
+  }
+);
 
 describe('UserDashboard Component', () => {
   it('renders a personalized greeting with the username', () => {

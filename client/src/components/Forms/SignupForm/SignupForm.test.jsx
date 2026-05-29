@@ -97,9 +97,7 @@ describe('SignupForm', () => {
 
     // --- Assert ---
     await waitFor(() => {
-      expect(
-        screen.getByText(/user already registered/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/user already registered/i)).toBeInTheDocument();
     });
   });
 
@@ -117,8 +115,6 @@ describe('SignupForm', () => {
     await user.click(screen.getByRole('button', { name: /register/i }));
 
     // --- Assert ---
-    expect(
-      screen.getByRole('button', { name: /registering/i })
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: /registering/i })).toBeDisabled();
   });
 });

@@ -4,15 +4,18 @@ import { useAuth } from '../../../providers/AuthProvider/AuthProvider';
 import AdminDashboard from './AdminDashboard';
 
 // Mock AuthProvider module to control state and prevent internal side effects
-vi.mock('../../../providers/AuthProvider/AuthProvider', async (importOriginal) => {
-  const actual = await importOriginal();
-  return {
-    ...actual,
-    useAuth: vi.fn(),
-    // Replace provider with fragment to stop background auth checks during tests
-    AuthProvider: ({ children }) => children,
-  };
-});
+vi.mock(
+  '../../../providers/AuthProvider/AuthProvider',
+  async (importOriginal) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      useAuth: vi.fn(),
+      // Replace provider with fragment to stop background auth checks during tests
+      AuthProvider: ({ children }) => children,
+    };
+  }
+);
 
 describe('AdminDashboard Component', () => {
   it('renders a personalized welcome message for the admin', () => {
