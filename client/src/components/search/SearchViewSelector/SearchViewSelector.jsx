@@ -1,4 +1,4 @@
-import { Table, LayoutGrid, List } from 'lucide-react';
+import { LayoutGrid, List, Table } from 'lucide-react';
 import styles from './SearchViewSelector.module.css';
 
 const VIEWS = [
@@ -18,7 +18,9 @@ const VIEWS = [
  */
 const SearchViewSelector = ({ activeView = 'table', onViewChange }) => (
   <div className={styles.selector} role="group" aria-label="View mode">
-    {VIEWS.map(({ key, Icon, label }) => {
+    {VIEWS.map((view) => {
+      const { key, label } = view;
+      const ViewIcon = view.Icon;
       const isActive = activeView === key;
       const isDisabled = key !== 'table';
       return (
@@ -31,7 +33,7 @@ const SearchViewSelector = ({ activeView = 'table', onViewChange }) => (
           title={isDisabled ? `${label} (coming soon)` : label}
           disabled={isDisabled}
         >
-          <Icon size={14} />
+          <ViewIcon size={14} />
         </button>
       );
     })}

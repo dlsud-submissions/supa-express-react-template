@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
 import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import styles from './SearchBar.module.css';
 
 /**
@@ -14,7 +14,7 @@ const SearchBar = () => {
   const [searchParams] = useSearchParams();
   const [value, setValue] = useState(searchParams.get('q') || '');
 
-  // Sync input if URL q param changes externally
+  // Sync input if URL q param changes externally (e.g. browser back/forward)
   useEffect(() => {
     setValue(searchParams.get('q') || '');
   }, [searchParams]);
