@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { authApi } from '../../../modules/api/auth/auth.api.js';
 import { signupSchema } from '../../../modules/validators/auth/auth.validator.js';
-import ValidationError from '../../errors/ValidationError/ValidationError';
+import ValidationError from '../../errors/ValidationError/ValidationError.jsx';
 import styles from './SignupForm.module.css';
 
 /**

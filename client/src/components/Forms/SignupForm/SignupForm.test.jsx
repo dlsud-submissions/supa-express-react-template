@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import SignupForm from './SignupForm';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import SignupForm from './SignupForm.jsx';
 
 // Mock authApi — SignupForm calls authApi.signup() directly
 vi.mock('../../../modules/api/auth/auth.api.js', () => ({
