@@ -187,20 +187,9 @@
 
     // ── Database ───────────────────────────────────────────────
     {
-      "label": "🗄️ DB: Studio",
+      "label": "🗄️ DB: Apply Schema",
       "type": "npm",
-      "script": "db:studio",
-      "path": "server",
-      "presentation": {
-        "group": "database",
-        "panel": "dedicated",
-        "reveal": "always"
-      }
-    },
-    {
-      "label": "🗄️ DB: Migrate + Generate",
-      "type": "npm",
-      "script": "db:sync",
+      "script": "db:schema",
       "path": "server",
       "presentation": {
         "group": "database",
