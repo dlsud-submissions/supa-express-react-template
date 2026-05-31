@@ -136,7 +136,7 @@
       "label": "🎨 Format: Check",
       "type": "npm",
       "script": "format:check",
-      "path": "client",
+      "path": ".",
       "presentation": {
         "group": "quality",
         "panel": "dedicated",
@@ -147,7 +147,7 @@
       "label": "🎨 Format: Fix (write)",
       "type": "npm",
       "script": "format",
-      "path": "client",
+      "path": ".",
       "presentation": {
         "group": "quality",
         "panel": "dedicated",
