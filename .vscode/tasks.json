@@ -134,9 +134,8 @@
     // ── Formatting ─────────────────────────────────────────────
     {
       "label": "🎨 Format: Check",
-      "type": "npm",
-      "script": "format:check",
-      "path": "client",
+      "type": "shell",
+      "command": "npm run format:check",
       "presentation": {
         "group": "quality",
         "panel": "dedicated",
@@ -145,9 +144,8 @@
     },
     {
       "label": "🎨 Format: Fix (write)",
-      "type": "npm",
-      "script": "format",
-      "path": "client",
+      "type": "shell",
+      "command": "npm run format",
       "presentation": {
         "group": "quality",
         "panel": "dedicated",
