@@ -1,5 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// ---------------------------------------------------------------------------
+// SQL alternative
+//
+// This script seeds the database via the Supabase Admin SDK.
+// If you prefer to run SQL directly, use the equivalent SQL file instead:
+//
+//   supabase/seed.sql
+//
+// You can apply it in the Supabase Dashboard → SQL Editor, or via the CLI:
+//   supabase db push
+//
+// Both approaches produce the same four development accounts.
+// ---------------------------------------------------------------------------
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Path reference — not executed here, but available for tooling or logging
+export const SEED_SQL_PATH = path.resolve(
+  __dirname,
+  '../../../supabase/seed.sql'
+);
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -24,6 +49,8 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
  *   can read it and populate public.users on INSERT.
  * - Roles are set via a follow-up UPDATE after the auth user is created,
  *   because the trigger always inserts with the default role of 'USER'.
+ *
+ * SQL equivalent: supabase/seed.sql
  */
 const SEED_USERS = [
   { username: 'Bryan', password: 'testpass123', role: 'USER' },
@@ -94,9 +121,13 @@ async function patchRole(userId, username, role) {
 
 /**
  * Main seed runner.
+ *
+ * Tip: to run the SQL equivalent instead, see:
+ *   supabase/seed.sql
  */
 async function seed() {
   console.log('\n🌱  Seeding Supabase users...\n');
+  console.log(`    SQL alternative: supabase/seed.sql\n`);
 
   for (const seedUser of SEED_USERS) {
     console.log(`→  ${seedUser.username} (${seedUser.role})`);
