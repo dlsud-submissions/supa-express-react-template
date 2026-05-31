@@ -11,13 +11,11 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- 
+-
 
 ### Fixed
 
-- 
-
----
+- ***
 
 ## [0.1.0] — Initial Release
 
