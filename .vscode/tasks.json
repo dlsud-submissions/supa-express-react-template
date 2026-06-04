@@ -185,30 +185,6 @@
       }
     },
 
-    // ── Database ───────────────────────────────────────────────
-    {
-      "label": "🗄️ DB: Apply Schema",
-      "type": "npm",
-      "script": "db:schema",
-      "path": "server",
-      "presentation": {
-        "group": "database",
-        "panel": "shared",
-        "reveal": "always"
-      }
-    },
-    {
-      "label": "🗄️ DB: Seed",
-      "type": "npm",
-      "script": "db:seed",
-      "path": "server",
-      "presentation": {
-        "group": "database",
-        "panel": "shared",
-        "reveal": "always"
-      }
-    },
-
     // ── Setup ──────────────────────────────────────────────────
     {
       "label": "🛠️ Setup: Install All",
