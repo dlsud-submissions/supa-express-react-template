@@ -11,9 +11,6 @@
     "=== TESTING ===": "",
     "test": "vitest run",
     "test:watch": "vitest",
-    "=== DATABASE ===": "",
-    "db:schema": "node src/db/schema.js",
-    "db:seed": "node src/db/seed.js",
     "=== CODE QUALITY ===": "",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
